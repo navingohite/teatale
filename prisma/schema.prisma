@@ -1,0 +1,172 @@
+generator client {
+ provider = "prisma-client-js"
+}
+datasource db {
+ provider = "postgresql"
+ url = env("DATABASE_URL")
+}
+model Product {
+ id String @id @default(cuid())
+ slug String @unique
+ name String
+ sku String @unique
+ position Int
+ type String
+ status String @default("DRAFT")
+ price Int?
+ stock Int?
+ weight Int?
+ bestBefore Int?
+ image String
+ summary String
+ taste String
+ origin String?
+ ingredients String?
+ caffeine String
+ brewing String
+ storage String
+ claims String
+ archived Boolean @default(false)
+ updatedAt DateTime @db.Timestamptz(3) @updatedAt
+}
+model Content {
+ key String @id
+ title String
+ body String
+ image String?
+ approved Boolean @default(false)
+}
+model Settings {
+ id String @id @default("store")
+ name String @default("Tea Tale")
+ email String @default("teatale2026@gmail.com")
+ instagram String @default("teataleindia")
+ pins String @default("")
+ fee Int @default(0)
+ freeAbove Int?
+ estimate String @default("")
+ cod Boolean @default(false)
+ prepaid Boolean @default(false)
+ featured String @default("himalayan-green-tea,himalayan-black-tea")
+}
+model Order {
+ id String @id @default(cuid())
+ number String @unique
+ idempotency String @unique
+ requestHash String
+ tokenHash String @unique
+ name String
+ email String
+ phone String
+ address Json
+ subtotal Int
+ shipping Int
+ total Int
+ method String
+ payment String @default("PENDING")
+ fulfilment String @default("NEW")
+ providerOrder String? @unique
+ providerPayment String? @unique
+ refundId String? @unique
+ courier String?
+ tracking String?
+ trackingUrl String?
+ expiresAt DateTime? @db.Timestamptz(3)
+ createdAt DateTime @db.Timestamptz(3) @default(now())
+ items OrderItem[]
+ outbox Outbox[]
+}
+model OrderItem {
+ id String @id @default(cuid())
+ orderId String
+ order Order @relation(fields:[orderId], references:[id])
+ productId String
+ name String
+ sku String
+ weight Int
+ price Int
+ quantity Int
+}
+model Outbox {
+ id String @id @default(cuid())
+ orderId String
+ order Order @relation(fields:[orderId],references:[id])
+ kind String
+ payload Json
+ sentAt DateTime? @db.Timestamptz(3)
+ lockedAt DateTime? @db.Timestamptz(3)
+ @@unique([orderId,kind])
+}
+model Otp {
+ id String @id
+ orderId String
+ hash String
+ expiresAt DateTime @db.Timestamptz(3)
+ attempts Int @default(0)
+}
+model RateLimit {
+ key String @id
+ count Int
+ expiresAt DateTime @db.Timestamptz(3)
+}
+model Audit {
+ id String @id @default(cuid())
+ actor String
+ action String
+ target String
+ details Json
+ createdAt DateTime @db.Timestamptz(3) @default(now())
+}
+model User {
+ id String @id
+ name String
+ email String @unique
+ emailVerified Boolean @default(false)
+ image String?
+ role String @default("admin")
+ createdAt DateTime @db.Timestamptz(3) @default(now())
+ updatedAt DateTime @db.Timestamptz(3) @updatedAt
+ sessions Session[]
+ accounts Account[]
+}
+model Session {
+ id String @id
+ expiresAt DateTime @db.Timestamptz(3)
+ token String @unique
+ createdAt DateTime @db.Timestamptz(3) @default(now())
+ updatedAt DateTime @db.Timestamptz(3) @updatedAt
+ ipAddress String?
+ userAgent String?
+ userId String
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+}
+model Account {
+ id String @id
+ accountId String
+ providerId String
+ userId String
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ accessToken String?
+ refreshToken String?
+ idToken String?
+ accessTokenExpiresAt DateTime? @db.Timestamptz(3)
+ refreshTokenExpiresAt DateTime? @db.Timestamptz(3)
+ scope String?
+ password String?
+ createdAt DateTime @db.Timestamptz(3) @default(now())
+ updatedAt DateTime @db.Timestamptz(3) @updatedAt
+}
+model Verification {
+ id String @id
+ identifier String
+ value String
+ expiresAt DateTime @db.Timestamptz(3)
+ createdAt DateTime @db.Timestamptz(3) @default(now())
+ updatedAt DateTime @db.Timestamptz(3) @updatedAt
+}
+model AuthRateLimit {
+ id String @id @default(cuid())
+ key String @unique
+ count Int
+ lastRequest BigInt
+}

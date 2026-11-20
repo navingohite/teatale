@@ -1,0 +1,297 @@
+[
+  {
+    "position": 1,
+    "name": "Himalayan Green Tea",
+    "slug": "himalayan-green-tea",
+    "summary": "A fresh, gentle cup from the hills of Himachal.",
+    "sourceFields": {
+      "PACK": "100 g  ·  Sourced directly from Himachal Pradesh  ·  Best before 12 months from the date of packing",
+      "ABOUT": "Hand-picked green tea leaves from Himachal Pradesh, gently processed to keep a clean, fresh taste. A smooth everyday green tea that is easy to love.",
+      "ORIGIN & HISTORY": "Tea has grown in Himachal’s Kangra Valley since the 1840s, when Chinese tea plants were brought to the region. The cool mountain air and rain suit slow-growing, flavourful leaf.",
+      "TYPE & INFUSION": "Green tea (unoxidised Camellia sinensis), a leaf infusion.",
+      "TASTE & AROMA": "Light, fresh and lightly grassy, with a soft sweet finish.",
+      "BENEFITS": "Rich in antioxidant catechins (EGCG) Gentle caffeine plus L-theanine for a calm, clear mind A light, sugar-free drink for a balanced lifestyle",
+      "HOW TO BREW": "75–80°C water, 2–3 minutes. Can be re-steeped once. Boiling water makes it bitter.",
+      "CAFFEINE": "Low to moderate."
+    },
+    "sourceImage": "media/07f9f8ec05f0ae9540320c7a9fb055e4c0bef9c5.png",
+    "image": "/teas/himalayan-green-tea-960.webp",
+    "alt": "Himalayan Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 2,
+    "name": "Himalayan Black Tea",
+    "slug": "himalayan-black-tea",
+    "summary": "Bold, rich and full of flavour.",
+    "sourceFields": {
+      "PACK": "100 g  ·  Sourced directly from Himachal Pradesh  ·  Best before 12 months from the date of packing",
+      "ABOUT": "Whole-leaf black tea with a deep amber cup and a full, satisfying aroma. Enjoy it plain, with milk or with a slice of lemon.",
+      "ORIGIN & HISTORY": "Grown in the hills of Himachal Pradesh, where tea has been cultivated since the 1840s. Black tea is made by fully oxidising the leaf, which gives it its dark colour and malty depth. India’s commercial tea industry began in the 1830s.",
+      "TYPE & INFUSION": "Black tea (fully oxidised Camellia sinensis).",
+      "TASTE & AROMA": "Robust, malty and smooth, with a lingering finish.",
+      "BENEFITS": "Flavonoids that may support a healthy heart Theaflavins that help fight free radicals Caffeine with L-theanine for smooth, focused alertness",
+      "HOW TO BREW": "95–100°C water, 3–5 minutes. Add milk, honey or lemon to taste.",
+      "CAFFEINE": "Moderate to high."
+    },
+    "sourceImage": "media/0ee04d952bc0dc2d659fc948a39ffb602cd19c55.png",
+    "image": "/teas/himalayan-black-tea-960.webp",
+    "alt": "Himalayan Black Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 3,
+    "name": "Tulsi Green Tea",
+    "slug": "tulsi-green-tea",
+    "summary": "Green tea with the sacred herb of India.",
+    "sourceFields": {
+      "ABOUT": "Green tea blended with tulsi (holy basil) for a fragrant, calming cup. A refreshing way to bring a traditional Indian herb into your daily routine.",
+      "ORIGIN & HISTORY": "Tulsi (Ocimum tenuiflorum) has been grown in Indian courtyards and revered for thousands of years. Ayurveda calls it the “Queen of Herbs”.",
+      "TYPE & INFUSION": "Green tea and herb blend.",
+      "TASTE & AROMA": "Fresh, slightly peppery and clove-like, with a clean green-tea base.",
+      "BENEFITS": "Rich in antioxidants from green tea A calming, aromatic cup Gentle caffeine plus L-theanine for a clear mind",
+      "HOW TO BREW": "80°C water, 3 minutes.",
+      "CAFFEINE": "Low to moderate.",
+      "PLEASE NOTE": "Tulsi is often avoided in pregnancy. Please check with your doctor."
+    },
+    "sourceImage": "media/72c6f31d43642c361de743b27735facfb45f07f0.png",
+    "image": "/teas/tulsi-green-tea-960.webp",
+    "alt": "Tulsi Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 4,
+    "name": "Blue Tea",
+    "slug": "blue-tea",
+    "summary": "A caffeine-free cup that changes colour.",
+    "sourceFields": {
+      "ABOUT": "Whole butterfly pea flowers that brew a vivid blue. Add a squeeze of lemon and watch the cup turn violet.",
+      "ORIGIN & HISTORY": "Butterfly pea (Clitoria ternatea) is known in India as aparajita and has long been used in Ayurveda. It is also a favourite in Thailand and Malaysia, where the flowers colour rice, sweets and drinks.",
+      "TYPE & INFUSION": "Herbal flower infusion. Not a true tea (no tea leaf).",
+      "TASTE & AROMA": "Mild, smooth and earthy, with a gentle woody note.",
+      "BENEFITS": "Caffeine-free, so good for any hour Contains anthocyanins, natural antioxidant pigments Colour-changing fun for guests",
+      "HOW TO BREW": "90–95°C water, 5 minutes. Add lemon for a purple cup, or serve iced.",
+      "CAFFEINE": "None."
+    },
+    "sourceImage": "media/fc23beb5b4bfb0ca01e2550492b66fb8499c3bd1.png",
+    "image": "/teas/blue-tea-960.webp",
+    "alt": "Blue Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 5,
+    "name": "Ginger Lemon Tulsi Green Tea",
+    "slug": "ginger-lemon-tulsi-green-tea",
+    "summary": "Zesty, soothing and refreshing.",
+    "sourceFields": {
+      "ABOUT": "Green tea with ginger, lemon and tulsi for a bright, warming cup that works hot or iced.",
+      "ORIGIN & HISTORY": "Ginger (Zingiber officinale) has been grown in India for thousands of years and is a staple of Indian kitchens and home remedies. Lemon adds the fresh citrus lift.",
+      "TYPE & INFUSION": "Green tea and herb blend.",
+      "TASTE & AROMA": "Sharp ginger warmth, citrus brightness and a soft herbal finish.",
+      "BENEFITS": "Rich in antioxidants A comforting ginger and tulsi blend Gentle caffeine for a clear mind",
+      "HOW TO BREW": "80°C water, 3–4 minutes.",
+      "CAFFEINE": "Low to moderate."
+    },
+    "sourceImage": "media/82b1798b287c739bb7d52567413a91f63a44fcce.png",
+    "image": "/teas/ginger-lemon-tulsi-green-tea-960.webp",
+    "alt": "Ginger Lemon Tulsi Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 6,
+    "name": "Pomegranate Cinnamon Green Tea",
+    "slug": "pomegranate-cinnamon-green-tea",
+    "summary": "Fruity, warming and full of colour.",
+    "sourceFields": {
+      "ABOUT": "Green tea with sweet-tart pomegranate and a touch of cinnamon. A fragrant cup that is lovely hot or over ice.",
+      "ORIGIN & HISTORY": "Pomegranate comes from the region around Persia and has been prized in Asia for thousands of years. Cinnamon was a key product of the old spice trade, from Sri Lanka and Kerala.",
+      "TYPE & INFUSION": "Green tea and fruit-spice blend.",
+      "TASTE & AROMA": "Juicy and lightly tart, with sweet cinnamon warmth.",
+      "BENEFITS": "Rich in antioxidants May support heart health as part of a balanced diet Gentle caffeine for a clear mind",
+      "HOW TO BREW": "80°C water, 3 minutes.",
+      "CAFFEINE": "Low to moderate."
+    },
+    "sourceImage": "media/27eabff1e08900aca833e88e8620b76339f2473c.png",
+    "image": "/teas/pomegranate-cinnamon-green-tea-960.webp",
+    "alt": "Pomegranate Cinnamon Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 7,
+    "name": "Lavender Green Tea",
+    "slug": "lavender-green-tea",
+    "summary": "A calming floral cup.",
+    "sourceFields": {
+      "ABOUT": "Green tea scented with real lavender buds for a soft, relaxing aroma.",
+      "ORIGIN & HISTORY": "Lavender (Lavandula) comes from the Mediterranean. Its name comes from the Latin lavare, “to wash”, as the Romans used it in their baths. In India it is now grown in the hills of Jammu and Kashmir.",
+      "TYPE & INFUSION": "Green tea and flower blend.",
+      "TASTE & AROMA": "Gentle floral notes over a smooth green tea base.",
+      "BENEFITS": "A calming aroma for a relaxed moment Rich in antioxidants Calm focus from caffeine with L-theanine",
+      "HOW TO BREW": "80°C water, 3 minutes. Do not over-steep, as lavender can turn soapy.",
+      "CAFFEINE": "Low to moderate."
+    },
+    "sourceImage": "media/8b048c491d26e26ad47437c0187cb02c1538da3b.png",
+    "image": "/teas/lavender-green-tea-960.webp",
+    "alt": "Lavender Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 8,
+    "name": "Ginger Lemon Tulsi Black Tea",
+    "slug": "ginger-lemon-tulsi-black-tea",
+    "summary": "Bold black tea with a zesty kick.",
+    "sourceFields": {
+      "ABOUT": "Strong black tea lifted with ginger, lemon and tulsi. A lively morning cup or a warming afternoon pick-me-up.",
+      "ORIGIN & HISTORY": "Brings together India’s black tea tradition with ginger, a kitchen staple for thousands of years, and tulsi, the revered holy basil.",
+      "TYPE & INFUSION": "Black tea and herb blend.",
+      "TASTE & AROMA": "Robust tea, spicy ginger, bright citrus and a herbal finish.",
+      "BENEFITS": "Natural caffeine with L-theanine for smooth, focused alertness Theaflavins that help fight free radicals A comforting ginger and tulsi blend",
+      "HOW TO BREW": "95–100°C water, 4 minutes. Lovely with honey.",
+      "CAFFEINE": "Moderate to high."
+    },
+    "sourceImage": "media/2d98efa74f0f78ab5bd7c183e2bfa6173a9bb7f3.png",
+    "image": "/teas/ginger-lemon-tulsi-black-tea-960.webp",
+    "alt": "Ginger Lemon Tulsi Black Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 9,
+    "name": "Premium Darjeeling Sweet Tea",
+    "slug": "premium-darjeeling-sweet-tea",
+    "summary": "Delicate, floral and naturally sweet.",
+    "sourceFields": {
+      "ABOUT": "Light, aromatic whole-leaf tea from the hills of Darjeeling, with a gently sweet cup. Best enjoyed without milk.",
+      "ORIGIN & HISTORY": "Darjeeling’s first tea plants, grown from Chinese seed, were planted in the early 1840s. Commercial gardens followed in the 1850s. It is often called the “Champagne of teas” and has been a protected Geographical Indication since 2004.",
+      "TYPE & INFUSION": "Black tea (lightly oxidised leaf).",
+      "TASTE & AROMA": "Light, floral and gently sweet, with a bright amber cup.",
+      "BENEFITS": "Caffeine with L-theanine for smooth alertness Theaflavins that help fight free radicals A refined cup to sip slowly",
+      "HOW TO BREW": "90–95°C water, 3–4 minutes. Skip the milk.",
+      "CAFFEINE": "Moderate."
+    },
+    "sourceImage": "media/43884817dd18de95cee72251e8ab8f0a0daf2f36.png",
+    "image": "/teas/premium-darjeeling-sweet-tea-960.webp",
+    "alt": "Premium Darjeeling Sweet Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 10,
+    "name": "Chamomile Tea",
+    "slug": "chamomile-tea",
+    "summary": "A gentle cup for winding down.",
+    "sourceFields": {
+      "ABOUT": "Whole chamomile blossoms that brew a soft golden cup. A calm, caffeine-free choice for evenings.",
+      "ORIGIN & HISTORY": "Chamomile (Matricaria chamomilla) was used in ancient Egypt, Greece and Rome. Its Greek name means “ground apple”, after its fresh apple-like scent.",
+      "TYPE & INFUSION": "Herbal flower infusion. Not a true tea (no tea leaf).",
+      "TASTE & AROMA": "Soft, honeyed and apple-like, with a floral finish.",
+      "BENEFITS": "Caffeine-free Traditionally enjoyed to relax body and mind A natural bedtime ritual",
+      "HOW TO BREW": "95–100°C water, 5 minutes, covered.",
+      "CAFFEINE": "None.",
+      "PLEASE NOTE": "Avoid if you are allergic to ragweed or daisy-family plants."
+    },
+    "sourceImage": "media/7300b3ef696bfb954b6eb822b7ebc70a56f213ec.png",
+    "image": "/teas/chamomile-tea-960.webp",
+    "alt": "Chamomile Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 11,
+    "name": "Moringa Hibiscus Green Tea",
+    "slug": "moringa-hibiscus-green-tea",
+    "summary": "Tart, fruity and nutrient-rich.",
+    "sourceFields": {
+      "ABOUT": "Green tea with moringa leaf and ruby hibiscus petals. A bright, tangy cup with a deep pink colour.",
+      "ORIGIN & HISTORY": "Moringa (Moringa oleifera) is native to the sub-Himalayan parts of India. Its leaves and drumsticks are used in Indian cooking and Ayurveda. Hibiscus (roselle) petals are used for tea in India, Africa and the Middle East.",
+      "TYPE & INFUSION": "Green tea and herb-flower blend.",
+      "TASTE & AROMA": "Tangy and fruity from the hibiscus, with an earthy green note.",
+      "BENEFITS": "Nutrient-rich moringa leaf, traditionally valued in Indian kitchens Rich in antioxidants Gentle caffeine for a clear mind",
+      "HOW TO BREW": "80°C water, 3–4 minutes. Add honey if you like it less tart.",
+      "CAFFEINE": "Low to moderate.",
+      "PLEASE NOTE": "Hibiscus may lower blood pressure. Check with your doctor if you take blood pressure medicine."
+    },
+    "sourceImage": "media/b01ba65bae2780e2aaa40560d1279cd5d6f78933.png",
+    "image": "/teas/moringa-hibiscus-green-tea-960.webp",
+    "alt": "Moringa Hibiscus Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 12,
+    "name": "Turmeric Ginger Tulsi Green Tea",
+    "slug": "turmeric-ginger-tulsi-green-tea",
+    "summary": "Golden, warming and comforting.",
+    "sourceFields": {
+      "ABOUT": "Green tea with turmeric, ginger and tulsi. A cosy, spiced cup with a golden glow.",
+      "ORIGIN & HISTORY": "Turmeric (Curcuma longa) has been grown in India for about 4,000 years. It is used in cooking, ceremonies and Ayurveda. Ginger and tulsi complete the trio.",
+      "TYPE & INFUSION": "Green tea and herb-spice blend.",
+      "TASTE & AROMA": "Earthy turmeric, peppery ginger and a fresh herbal finish.",
+      "BENEFITS": "Rich in antioxidants A golden, warming cup Soothing tulsi and gentle caffeine",
+      "HOW TO BREW": "80°C water, 4 minutes.",
+      "CAFFEINE": "Low to moderate.",
+      "PLEASE NOTE": "Check with your doctor if you take blood thinners."
+    },
+    "sourceImage": "media/3b7938b8e9cf01400683a737038fcad1dc2ef7ea.png",
+    "image": "/teas/turmeric-ginger-tulsi-green-tea-960.webp",
+    "alt": "Turmeric Ginger Tulsi Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 13,
+    "name": "Peppermint Tulsi Green Tea",
+    "slug": "peppermint-tulsi-green-tea",
+    "summary": "Cool, crisp and refreshing.",
+    "sourceFields": {
+      "ABOUT": "Green tea with fresh peppermint and aromatic tulsi. A clean, cooling cup that is great after meals or over ice.",
+      "ORIGIN & HISTORY": "Peppermint (Mentha × piperita) is a natural cross of watermint and spearmint, grown for its cooling aroma for centuries. Tulsi adds the Indian herbal touch.",
+      "TYPE & INFUSION": "Green tea and herb blend.",
+      "TASTE & AROMA": "Cool mint up front, soft tulsi underneath.",
+      "BENEFITS": "A refreshing, clean finish Rich in antioxidants Gentle caffeine plus L-theanine",
+      "HOW TO BREW": "80°C water, 3 minutes.",
+      "CAFFEINE": "Low to moderate.",
+      "PLEASE NOTE": "Peppermint can aggravate acid reflux in some people."
+    },
+    "sourceImage": "media/40f2fc678003b67328ee54fe57e9eb937092749b.png",
+    "image": "/teas/peppermint-tulsi-green-tea-960.webp",
+    "alt": "Peppermint Tulsi Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 14,
+    "name": "Kashmiri Kahwa Green Tea",
+    "slug": "kashmiri-kahwa-green-tea",
+    "summary": "Inspired by the traditional spiced tea of the Himalayas.",
+    "sourceFields": {
+      "ABOUT": "Green tea with warming spices, in the spirit of Kashmir’s famous kahwa. A fragrant cup for cool evenings.",
+      "ORIGIN & HISTORY": "Kahwa comes from Kashmir and the old Silk Route. It is traditionally brewed with saffron, cardamom, cinnamon and almonds, and served to guests.",
+      "TYPE & INFUSION": "Green tea and spice blend.",
+      "TASTE & AROMA": "Warm cardamom and cinnamon over a smooth green tea.",
+      "BENEFITS": "Rich in antioxidants A comforting, aromatic cup Gentle caffeine for a clear mind",
+      "HOW TO BREW": "80°C water, 4 minutes. Add honey or crushed almonds for a traditional touch.",
+      "CAFFEINE": "Low to moderate."
+    },
+    "sourceImage": "media/1926febe51a1424b8399711e06866b530f1562e6.png",
+    "image": "/teas/kashmiri-kahwa-green-tea-960.webp",
+    "alt": "Kashmiri Kahwa Green Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 15,
+    "name": "Masala Chai Black Tea",
+    "slug": "masala-chai-black-tea",
+    "summary": "The classic Indian chai, made for milk.",
+    "sourceFields": {
+      "ABOUT": "Strong black tea blended with ginger, cardamom and cinnamon. It makes a rich, comforting chai.",
+      "ORIGIN & HISTORY": "Spiced drinks have a long history in India. Masala chai took shape in the early 1900s, when tea spread to Indian homes and street stalls and sellers added milk and spices.",
+      "TYPE & INFUSION": "Black tea and spice blend (decoction).",
+      "TASTE & AROMA": "Bold tea with sweet, warming spice.",
+      "BENEFITS": "Caffeine with L-theanine for smooth alertness Theaflavins that help fight free radicals A warming, comforting ritual",
+      "HOW TO BREW": "Simmer 1 teaspoon in 100 ml water and 100 ml milk for 3–4 minutes. Strain and sweeten.",
+      "CAFFEINE": "Moderate to high."
+    },
+    "sourceImage": "media/591dea3225c4e50aebff66ac87d43553d2a4d4d0.png",
+    "image": "/teas/masala-chai-black-tea-960.webp",
+    "alt": "Masala Chai Black Tea — Tea Tale catalogue product image"
+  },
+  {
+    "position": 16,
+    "name": "Rose Tulsi Black Tea",
+    "slug": "rose-tulsi-black-tea",
+    "summary": "Floral, fragrant and soft.",
+    "sourceFields": {
+      "ABOUT": "Black tea with rose petals and tulsi. A fragrant cup that is gentle, floral and a little indulgent.",
+      "ORIGIN & HISTORY": "Roses have been used in Persian and Indian cooking and drinks for centuries. Here they meet India’s black tea tradition and holy basil.",
+      "TYPE & INFUSION": "Black tea, flower and herb blend.",
+      "TASTE & AROMA": "Soft rose perfume over smooth, malty tea.",
+      "BENEFITS": "Caffeine with L-theanine for smooth alertness Theaflavins that help fight free radicals A soft floral aroma",
+      "HOW TO BREW": "95°C water, 3–4 minutes. Best without milk.",
+      "CAFFEINE": "Moderate."
+    },
+    "sourceImage": "media/e4cd40539c7c9872d52b9aea7c01e3542ba109bd.png",
+    "image": "/teas/rose-tulsi-black-tea-960.webp",
+    "alt": "Rose Tulsi Black Tea — Tea Tale catalogue product image"
+  }
+]
