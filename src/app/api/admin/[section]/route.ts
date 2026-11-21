@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { requireAdmin, audit } from "@/lib/admin";
 import { sameOrigin } from "@/lib/security";
 import { saveProduct, changeProductState } from "@/lib/products";
-import { provider } from "@/lib/commerce";
+import { provider, adjustStock } from "@/lib/commerce";
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ section: string }> },
@@ -146,11 +146,7 @@ export async function POST(
                 expiresAt: null,
               },
             });
-            for (const i of o.items)
-              await tx.product.update({
-                where: { id: i.productId },
-                data: { stock: { increment: i.quantity } },
-              });
+            for (const i of o.items) await adjustStock(tx, i, i.quantity);
           }
           if (input.action === "refund") {
             if (
@@ -199,11 +195,7 @@ export async function POST(
                 where: { id: o.id },
                 data: { payment: "REFUNDED", fulfilment: "CANCELLED" },
               });
-              for (const i of o.items)
-                await tx.product.update({
-                  where: { id: i.productId },
-                  data: { stock: { increment: i.quantity } },
-                });
+              for (const i of o.items) await adjustStock(tx, i, i.quantity);
             }
           }
           await tx.audit.create({

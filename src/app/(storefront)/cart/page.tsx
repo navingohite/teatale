@@ -1,3 +1,4 @@
+import { packInclude } from "@/lib/packs";
 import { db } from "@/lib/db";
 import { CartPage } from "@/components/store";
 export const dynamic = "force-dynamic";
@@ -8,9 +9,12 @@ export const metadata = {
 export default async function Cart() {
   return (
     <CartPage
-      products={(await db.product.findMany({ where: { published: true, archived: false } })).map(
-        (p) => ({ ...p, claims: "" }),
-      )}
+      products={(
+        await db.product.findMany({
+          include: packInclude,
+          where: { published: true, archived: false },
+        })
+      ).map((p) => ({ ...p, claims: "" }))}
     />
   );
 }

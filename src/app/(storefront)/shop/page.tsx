@@ -1,3 +1,4 @@
+import { packInclude } from "@/lib/packs";
 import { db } from "@/lib/db";
 import { ShopGrid } from "@/components/store";
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ export const metadata = {
 };
 export default async function Shop() {
   const products = await db.product.findMany({
+    include: packInclude,
     where: { published: true, archived: false, status: { not: "DRAFT" } },
     orderBy: { position: "asc" },
   });

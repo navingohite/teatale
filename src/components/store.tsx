@@ -2,11 +2,30 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Menu, X, Minus, Plus } from "lucide-react";
-import { money, availability } from "@/lib/format";
+import {
+  ShoppingBag,
+  Menu,
+  X,
+  Minus,
+  Plus,
+  Check,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
+import { money, availability, discountPercent } from "@/lib/format";
 import type { Product } from "@prisma/client";
+import {
+  activePacks,
+  displayProduct,
+  selectedPack,
+  cartKey,
+  packLabel,
+  type ProductWithPacks,
+} from "@/lib/packs";
 type Item = {
   id: string;
+  variantId?: string;
+  weight?: number;
   name: string;
   image: string;
   quantity: number;
@@ -15,10 +34,19 @@ type Item = {
 const CartContext = createContext<{
   items: Item[];
   setItems: (v: Item[]) => void;
-}>({ items: [], setItems: () => {} });
+  notify: (title: string, detail: string) => void;
+}>({ items: [], setItems: () => {}, notify: () => {} });
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setState] = useState<Item[]>([]);
   const [ready, setReady] = useState(false);
+  const [toast, setToast] = useState<{ title: string; detail: string } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
   useEffect(() => {
     try {
       const a = JSON.parse(localStorage.getItem("tea-tale-cart") || "[]");
@@ -30,8 +58,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (ready) localStorage.setItem("tea-tale-cart", JSON.stringify(items));
   }, [items, ready]);
   return (
-    <CartContext.Provider value={{ items, setItems: setState }}>
+    <CartContext.Provider
+      value={{
+        items,
+        setItems: setState,
+        notify: (title, detail) => setToast({ title, detail }),
+      }}
+    >
       {children}
+      {toast && (
+        <aside className="bag-toast" aria-label="Bag notification">
+          <span className="bag-toast-icon" aria-hidden="true">
+            <Check size={20} />
+          </span>
+          <div className="bag-toast-body">
+            <div role="status" aria-live="polite" aria-atomic="true">
+              <strong>{toast.title}</strong>
+              <p>{toast.detail}</p>
+            </div>
+            <Link href="/cart" onClick={() => setToast(null)}>
+              View Bag <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
+          <button
+            type="button"
+            className="bag-toast-close"
+            aria-label="Close notification"
+            onClick={() => setToast(null)}
+          >
+            <X size={18} />
+          </button>
+        </aside>
+      )}
     </CartContext.Provider>
   );
 }
@@ -41,10 +99,7 @@ export function Header({ storeName = "Tea Tale" }: { storeName?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <div className="announcement">
-        TALES OF THE HIMALAYAS <span>•</span> A moment for yourself
-      </div>
-      <header>
+      <header className="store-header">
         <Link href="/" className="brand">
           <img
             className="brand-image"
@@ -149,28 +204,48 @@ export function ProductImage({
     </div>
   );
 }
-export function ProductCard({ p }: { p: Product }) {
+export function ProductCard({ p: source }: { p: ProductWithPacks }) {
+  const p = displayProduct(source);
+  const packs = activePacks(p);
   const status = availability(p);
+  const discount = discountPercent(p.price, p.mrp);
   return (
     <Link className="product-card" href={`/tea/${p.slug}`}>
       <div className="card-image">
-        <ProductImage p={p} />
-      </div>
-      <div className="card-detail">
-        <div className="card-meta">
+        <div className="card-image-tags">
           <span
             className={`card-status ${status === "Available" ? "available" : ""}`}
           >
             {status}
           </span>
-          {p.weight && <span>{p.weight} g · Loose leaf</span>}
+          {status === "Available" && discount > 0 && (
+            <span className="discount-badge">{discount}% OFF</span>
+          )}
         </div>
-        <small>{p.type}</small>
+        <ProductImage p={p} />
+      </div>
+      <div className="card-detail">
+        <div className="card-category">
+          <small>{p.type}</small>
+          {packs.length > 1 ? (
+            <span>{packs.length} pack sizes</span>
+          ) : p.weight ? (
+            <span>{packLabel(p.weight)} · Loose leaf</span>
+          ) : null}
+        </div>
         <h3>{p.name}</h3>
         <p>{p.taste}</p>
         <div className="card-bottom">
           {status === "Available" && (
-            <span className="card-price">{money(p.price!)}</span>
+            <div className="card-pricing">
+              <span className="card-price">
+                {packs.length > 1 && "From "}
+                {money(p.price!)}
+              </span>
+              {p.mrp != null && p.mrp > p.price! && (
+                <del aria-label={`MRP ${money(p.mrp)}`}>{money(p.mrp)}</del>
+              )}
+            </div>
           )}
           <span
             className={`card-action ${status === "Available" ? "buy" : ""}`}
@@ -183,7 +258,7 @@ export function ProductCard({ p }: { p: Product }) {
     </Link>
   );
 }
-export function ShopGrid({ products }: { products: Product[] }) {
+export function ShopGrid({ products }: { products: ProductWithPacks[] }) {
   const [filter, setFilter] = useState("All Teas");
   const shown = products.filter(
     (p) => filter === "All Teas" || p.type === filter,
@@ -211,27 +286,106 @@ export function ShopGrid({ products }: { products: Product[] }) {
     </>
   );
 }
-export function AddToCart({ p }: { p: Product }) {
+function QuantityControl({
+  value,
+  max,
+  label,
+  onChange,
+  disabled = false,
+}: {
+  value: number;
+  max: number;
+  label: string;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}) {
+  const limit = Math.max(1, Math.min(20, max));
+  return (
+    <div
+      className="quantity quantity-stepper"
+      role="group"
+      aria-label={`Quantity for ${label}`}
+    >
+      <button
+        type="button"
+        aria-label={`Decrease quantity for ${label}`}
+        title="Decrease quantity"
+        disabled={disabled || value <= 1}
+        onClick={() => onChange(Math.max(1, value - 1))}
+      >
+        <Minus size={16} />
+      </button>
+      <input
+        aria-label={`Quantity for ${label}`}
+        type="number"
+        inputMode="numeric"
+        min={1}
+        max={limit}
+        step={1}
+        value={value}
+        disabled={disabled}
+        onChange={(e) =>
+          onChange(
+            Math.max(
+              1,
+              Math.min(limit, Math.trunc(Number(e.target.value)) || 1),
+            ),
+          )
+        }
+      />
+      <button
+        type="button"
+        aria-label={`Increase quantity for ${label}`}
+        title="Increase quantity"
+        disabled={disabled || value >= limit}
+        onClick={() => onChange(Math.min(limit, value + 1))}
+      >
+        <Plus size={16} />
+      </button>
+    </div>
+  );
+}
+export function AddToCart({ p: source }: { p: ProductWithPacks }) {
+  const packs = activePacks(source);
+  const [variantId, setVariantId] = useState(
+    packs.find((v) => v.stock && v.price)?.id || packs[0]?.id,
+  );
+  const p = selectedPack(source, variantId) || {
+    ...source,
+    price: null,
+    stock: 0,
+    weight: null,
+  };
+  const purchasable = availability(p) === "Available";
+  const key = cartKey({ id: p.id, variantId });
   const router = useRouter();
-  const { items, setItems } = useCart();
-  const [quantity, setQuantity] = useState(1),
-    [message, setMessage] = useState("");
-  function add() {
-    const existing = items.find((i) => i.id === p.id);
+  const { items, setItems, notify } = useCart();
+  const [quantity, setQuantity] = useState(1);
+  function add(showNotification = true) {
+    if (!purchasable) return;
+    const existing = items.find((i) => cartKey(i) === key);
     const next = Math.min(p.stock!, 20, (existing?.quantity || 0) + quantity);
     setItems([
-      ...items.filter((i) => i.id !== p.id),
+      ...items.filter((i) => cartKey(i) !== key),
       {
         id: p.id,
+        variantId,
+        weight: p.weight!,
         name: p.name,
         image: p.image,
         quantity: next,
         price: p.price!,
       },
     ]);
-    setMessage("Added to your bag.");
+    if (showNotification)
+      notify(
+        next > (existing?.quantity || 0)
+          ? "Added to your bag"
+          : "Bag limit reached",
+        `${p.name} · ${packLabel(p.weight!)}`,
+      );
   }
-  if (availability(p) !== "Available")
+  if (source.status !== "AVAILABLE" || !source.published || source.archived)
     return (
       <div className="availability">
         <strong>{availability(p)}</strong>
@@ -244,55 +398,68 @@ export function AddToCart({ p }: { p: Product }) {
     );
   return (
     <div className="buy">
-      <div className="price">
-        {money(p.price!)} <small> / {p.weight} g</small>
-      </div>
-      <div className="buy-row">
-        <div className="quantity">
+      {packs.length > 0 && (
+        <fieldset className="pack-selector">
+          <legend>Choose pack size</legend>
+          <div className="pack-options">
+            {packs.map((v) => (
+              <button
+                type="button"
+                key={v.id}
+                aria-pressed={variantId === v.id}
+                onClick={() => {
+                  setVariantId(v.id);
+                  setQuantity(1);
+                }}
+              >
+                {packLabel(v.weight)}
+                {!v.stock || !v.price ? <small>Unavailable</small> : null}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      {!purchasable ? (
+        <p className="availability" role="status">
+          {availability(p)} — choose another pack size.
+        </p>
+      ) : (
+        <>
+          <div className="price">
+            {money(p.price!)} <small> / {packLabel(p.weight!)}</small>
+            {p.mrp != null && p.mrp > p.price! && (
+              <div className="card-pricing">
+                <del aria-label={`MRP ${money(p.mrp)}`}>{money(p.mrp)}</del>
+                {discountPercent(p.price, p.mrp) > 0 && (
+                  <span className="discount-badge">
+                    {discountPercent(p.price, p.mrp)}% OFF
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="buy-row">
+            <QuantityControl
+              value={quantity}
+              max={p.stock!}
+              label={`${p.name} ${packLabel(p.weight!)}`}
+              onChange={setQuantity}
+            />
+            <button className="button add-button" onClick={() => add()}>
+              Add to Bag <ShoppingBag size={17} />
+            </button>
+          </div>
           <button
-            aria-label="Decrease quantity"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="button secondary buy-now-button"
+            onClick={() => {
+              add(false);
+              router.push("/checkout");
+            }}
           >
-            <Minus size={16} />
+            Buy Now
           </button>
-          <input
-            aria-label="Quantity"
-            type="number"
-            min={1}
-            max={Math.min(20, p.stock!)}
-            value={quantity}
-            onChange={(e) =>
-              setQuantity(
-                Math.max(
-                  1,
-                  Math.min(20, p.stock!, Number(e.target.value) || 1),
-                ),
-              )
-            }
-          />
-          <button
-            aria-label="Increase quantity"
-            onClick={() => setQuantity(Math.min(20, p.stock!, quantity + 1))}
-          >
-            <Plus size={16} />
-          </button>
-        </div>
-        <button className="button add-button" onClick={add}>
-          Add to Bag <ShoppingBag size={17} />
-        </button>
-      </div>
-      <button
-        className="button secondary buy-now-button"
-        onClick={() => {
-          add();
-          router.push("/checkout");
-        }}
-      >
-        Buy Now
-      </button>
-      <p role="status">
-        {message} {message && <Link href="/cart">View bag</Link>}
-      </p>
+        </>
+      )}
     </div>
   );
 }
@@ -306,10 +473,11 @@ export async function api(action: string, body: unknown) {
   if (!r.ok) throw Error(data.error || "Please try again.");
   return data;
 }
-export function CartPage({ products }: { products: Product[] }) {
+export function CartPage({ products }: { products: ProductWithPacks[] }) {
   const { items, setItems } = useCart();
   const changed = items.some((i) => {
-    const p = products.find((p) => p.id === i.id);
+    const product = products.find((p) => p.id === i.id);
+    const p = product ? selectedPack(product, i.variantId) : null;
     return (
       !p ||
       p.price !== i.price ||
@@ -318,7 +486,7 @@ export function CartPage({ products }: { products: Product[] }) {
     );
   });
   return (
-    <div className="narrow">
+    <div className="narrow cart-page">
       <p className="eyebrow">YOUR DAILY RITUAL</p>
       <h1>Your tea bag</h1>
       {!items.length ? (
@@ -337,16 +505,22 @@ export function CartPage({ products }: { products: Product[] }) {
               Prices or availability have changed. Review the updated items
               before checkout.
               <button
-                className="text-link"
+                className="action-icon"
+                aria-label="Accept updated prices and availability"
+                title="Accept updated prices and availability"
                 onClick={() =>
                   setItems(
                     items.flatMap((i) => {
-                      const p = products.find((p) => p.id === i.id);
+                      const product = products.find((p) => p.id === i.id);
+                      const p = product
+                        ? selectedPack(product, i.variantId)
+                        : null;
                       return p && availability(p) === "Available"
                         ? [
                             {
                               ...i,
                               price: p.price!,
+                              weight: p.weight!,
                               quantity: Math.min(i.quantity, p.stock!),
                             },
                           ]
@@ -355,49 +529,56 @@ export function CartPage({ products }: { products: Product[] }) {
                   )
                 }
               >
-                Accept updates
+                <RefreshCw size={18} />
               </button>
             </div>
           )}
-          {items.map((i) => (
-            <div className="cart-line" key={i.id}>
-              <div>
-                <h3>{i.name}</h3>
-                <p>{money(i.price)} each</p>
-              </div>
-              <label>
-                Quantity
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={i.quantity}
-                  onChange={(e) =>
-                    setItems(
-                      items.map((x) =>
-                        x.id === i.id
-                          ? {
-                              ...x,
-                              quantity: Math.min(
-                                20,
-                                Math.max(1, Number(e.target.value) || 1),
-                              ),
-                            }
-                          : x,
-                      ),
-                    )
+          {items.map((i) => {
+            const product = products.find((p) => p.id === i.id);
+            const pack = product ? selectedPack(product, i.variantId) : null;
+            const label = `${i.name}${i.weight ? ` ${packLabel(i.weight)}` : ""}`;
+            return (
+              <div className="cart-line" key={cartKey(i)}>
+                <div className="cart-product-info">
+                  <h3>{i.name}</h3>
+                  <p>
+                    {i.weight ? `${packLabel(i.weight)} · ` : ""}
+                    {money(i.price)} each
+                  </p>
+                </div>
+                <div className="cart-quantity">
+                  <span className="quantity-caption">Quantity</span>
+                  <QuantityControl
+                    value={i.quantity}
+                    max={pack?.stock ?? 0}
+                    label={label}
+                    disabled={!pack || availability(pack) !== "Available"}
+                    onChange={(quantity) =>
+                      setItems(
+                        items.map((x) =>
+                          cartKey(x) === cartKey(i) ? { ...x, quantity } : x,
+                        ),
+                      )
+                    }
+                  />
+                </div>
+                <strong className="cart-line-total">
+                  {money(i.price * i.quantity)}
+                </strong>
+                <button
+                  type="button"
+                  className="action-icon danger"
+                  title={`Remove ${label}`}
+                  aria-label={`Remove ${label}`}
+                  onClick={() =>
+                    setItems(items.filter((x) => cartKey(x) !== cartKey(i)))
                   }
-                />
-              </label>
-              <strong>{money(i.price * i.quantity)}</strong>
-              <button
-                className="text-link"
-                onClick={() => setItems(items.filter((x) => x.id !== i.id))}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            );
+          })}
           <div className="total">
             <span>Subtotal</span>
             <strong>

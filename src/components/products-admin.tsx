@@ -2,7 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { Product } from "@prisma/client";
+import {
+  activePacks,
+  packLabel,
+  type ProductWithPacks as Product,
+} from "@/lib/packs";
 import {
   Plus,
   Search,
@@ -12,6 +16,8 @@ import {
   Upload,
   RotateCcw,
   Package,
+  Save,
+  LoaderCircle,
 } from "lucide-react";
 import { useConfirmation } from "./confirm-action";
 import { PhotoUpload } from "./admin";
@@ -187,7 +193,21 @@ export function ProductsAdmin({ products }: { products: Product[] }) {
                     )}
                 </td>
                 <td>
-                  <strong>{p.price ? money(p.price) : "Not set"}</strong>
+                  <strong>
+                    {activePacks(p).length > 1 ? "From " : ""}
+                    {p.price ? money(p.price) : "Not set"}
+                  </strong>
+                  {activePacks(p).length > 0 && (
+                    <small>
+                      {activePacks(p)
+                        .map(
+                          (v) =>
+                            `${packLabel(v.weight)}: ${v.stock ?? "—"} in stock`,
+                        )
+                        .join(" · ")}
+                    </small>
+                  )}
+                  {p.mrp != null && <small>MRP {money(p.mrp)}</small>}
                   <small className="stock-note">
                     {p.stock === null ? "Stock not set" : `${p.stock} packs`}
                   </small>
@@ -216,14 +236,16 @@ export function ProductsAdmin({ products }: { products: Product[] }) {
                     ) : (
                       <>
                         <button
+                          className="action-icon"
+                          aria-label={`Edit ${p.name}`}
+                          title={`Edit ${p.name}`}
                           disabled={busy}
                           onClick={() => {
                             setMessage("");
                             setEditor(p);
                           }}
                         >
-                          <Pencil size={15} />
-                          Edit
+                          <Pencil size={18} />
                         </button>
                         <Link href={"/admin-preview/" + p.slug}>
                           <Eye size={15} />
@@ -239,12 +261,13 @@ export function ProductsAdmin({ products }: { products: Product[] }) {
                           {p.published ? "Unpublish" : "Publish"}
                         </button>
                         <button
-                          className="delete-action"
+                          className="action-icon danger"
+                          aria-label={`Delete ${p.name}`}
+                          title={`Delete ${p.name}`}
                           disabled={busy}
                           onClick={() => action(p, "delete")}
                         >
-                          <Trash2 size={15} />
-                          Delete
+                          <Trash2 size={18} />
                         </button>
                       </>
                     )}
@@ -291,6 +314,40 @@ function ProductEditor({
     [dirty, setDirty] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  const [packs, setPacks] = useState(() => {
+    const initial = product ? activePacks(product) : [];
+    const rows = initial.length
+      ? initial
+      : product?.weight
+        ? [
+            {
+              id: undefined,
+              weight: product.weight,
+              price: product.price,
+              mrp: product.mrp,
+              stock: product.stock,
+            },
+          ]
+        : [];
+    return rows.map((v, index) => ({
+      key: v.id || `initial-${index}`,
+      id: v.id,
+      weight: String(v.weight),
+      price: v.price == null ? "" : String(v.price / 100),
+      mrp: v.mrp == null ? "" : String(v.mrp / 100),
+      stock: v.stock == null ? "" : String(v.stock),
+    }));
+  });
+  function updatePack(
+    key: string,
+    field: "weight" | "price" | "mrp" | "stock",
+    value: string,
+  ) {
+    setDirty(true);
+    setPacks((rows) =>
+      rows.map((v) => (v.key === key ? { ...v, [field]: value } : v)),
+    );
+  }
   const confirm = useConfirmation();
   async function close() {
     if (
@@ -309,8 +366,14 @@ function ProductEditor({
     const f = new FormData(form);
     const nullable = (key: string) =>
       f.get(key) === "" ? null : Number(f.get(key));
-    const price =
-      f.get("price") === "" ? null : Math.round(Number(f.get("price")) * 100);
+    const variants = packs.map((v) => ({
+      ...(v.id ? { id: v.id } : {}),
+      weight: Number(v.weight),
+      price: v.price === "" ? null : Math.round(Number(v.price) * 100),
+      mrp: v.mrp === "" ? null : Math.round(Number(v.mrp) * 100),
+      stock: v.stock === "" ? null : Number(v.stock),
+    }));
+    const price = variants[0]?.price ?? null;
     const published =
       mode === "publish"
         ? true
@@ -328,8 +391,10 @@ function ProductEditor({
       published,
       archived: false,
       price,
-      stock: nullable("stock"),
-      weight: nullable("weight"),
+      mrp: variants[0]?.mrp ?? null,
+      stock: variants[0]?.stock ?? null,
+      weight: variants[0]?.weight ?? null,
+      variants,
       bestBefore: nullable("bestBefore"),
       image,
       ...Object.fromEntries(
@@ -347,15 +412,22 @@ function ProductEditor({
     };
     setError("");
     if (
+      variants.some((v) => v.mrp != null && v.price != null && v.mrp < v.price)
+    ) {
+      setError("MRP must be greater than or equal to the selling price.");
+      return;
+    }
+    if (
       published &&
       (status === "DRAFT" ||
         (status === "AVAILABLE" &&
-          (!price || data.stock === null || !data.weight)))
+          (!variants.length ||
+            variants.some((v) => !v.price || v.stock === null || !v.weight))))
     ) {
       setError(
         status === "DRAFT"
           ? "Choose Coming Soon, Available or Out of Stock before publishing."
-          : "To publish an Available product, enter its INR price, pack weight and stock.",
+          : "To publish an Available product, add at least one pack size with a selling price and stock.",
       );
       return;
     }
@@ -512,40 +584,126 @@ function ProductEditor({
               Coming Soon is browsable but cannot be purchased. Available
               enables buying after price, pack weight and stock are set.
             </p>
-            <label>
-              Price (₹ INR)
-              <input
-                type="number"
-                name="price"
-                min="0.01"
-                max="1000000"
-                step="0.01"
-                defaultValue={product?.price != null ? product.price / 100 : ""}
-                placeholder="e.g. 250.00"
-              />
-            </label>
-            <div className="editor-two">
-              <label>
-                Stock (packs)
-                <input
-                  type="number"
-                  name="stock"
-                  min={0}
-                  step={1}
-                  defaultValue={product?.stock ?? ""}
-                />
-              </label>
-              <label>
-                Pack weight (g)
-                <input
-                  type="number"
-                  name="weight"
-                  min={1}
-                  step={1}
-                  defaultValue={product?.weight ?? ""}
-                />
-              </label>
+            <div className="pack-editor-heading">
+              <h3>Pack sizes</h3>
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy || packs.length >= 20}
+                onClick={() => {
+                  setPacks((rows) => [
+                    ...rows,
+                    {
+                      key: crypto.randomUUID(),
+                      id: undefined,
+                      weight: "",
+                      price: "",
+                      mrp: "",
+                      stock: "",
+                    },
+                  ]);
+                  setDirty(true);
+                }}
+              >
+                Add pack size
+              </button>
             </div>
+            <p className="editor-hint">
+              Enter weight in grams: 500 = 500g, 1000 = 1kg, 2000 = 2kg. Each
+              size has its own price and stock. Leave MRP blank if no discount
+              applies.
+            </p>
+            {!packs.length && (
+              <p className="notice">
+                No pack sizes yet. Add a size before making this tea available.
+              </p>
+            )}
+            {packs.map((v, index) => (
+              <fieldset className="pack-editor-row" key={v.key}>
+                <legend>
+                  Pack {index + 1}
+                  {v.weight ? ` · ${packLabel(Number(v.weight))}` : ""}
+                </legend>
+                <div className="editor-two">
+                  <label>
+                    Weight (g)
+                    <input
+                      type="number"
+                      min="1"
+                      max="100000"
+                      step="1"
+                      required
+                      readOnly={!!v.id}
+                      value={v.weight}
+                      onChange={(e) =>
+                        updatePack(v.key, "weight", e.target.value)
+                      }
+                    />
+                  </label>
+                  <label>
+                    Stock (packs)
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={v.stock}
+                      onChange={(e) =>
+                        updatePack(v.key, "stock", e.target.value)
+                      }
+                    />
+                  </label>
+                  <label>
+                    Selling Price (₹ INR)
+                    <input
+                      type="number"
+                      min="0.01"
+                      max="1000000"
+                      step="0.01"
+                      value={v.price}
+                      onChange={(e) =>
+                        updatePack(v.key, "price", e.target.value)
+                      }
+                    />
+                  </label>
+                  <label>
+                    MRP (₹ INR, optional)
+                    <input
+                      type="number"
+                      min="0.01"
+                      max="1000000"
+                      step="0.01"
+                      value={v.mrp}
+                      onChange={(e) => updatePack(v.key, "mrp", e.target.value)}
+                    />
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  className="action-icon danger"
+                  aria-label={`Remove pack size ${v.weight ? packLabel(Number(v.weight)) : index + 1}`}
+                  title="Remove pack size"
+                  disabled={busy}
+                  onClick={async () => {
+                    if (
+                      await confirm({
+                        title: "Remove this pack size?",
+                        message:
+                          "It will no longer be offered after saving. Previous orders will keep their selected size.",
+                        label: "Yes, remove",
+                        danger: true,
+                      })
+                    ) {
+                      setPacks((rows) =>
+                        rows.filter((row) => row.key !== v.key),
+                      );
+                      setDirty(true);
+                    }
+                  }}
+                >
+                  <Trash2 size={18} />
+                </button>
+              </fieldset>
+            ))}
             <label>
               Best before (months from packing)
               <input
@@ -611,23 +769,33 @@ function ProductEditor({
               type="submit"
               name="intent"
               value="draft"
-              className="button secondary"
+              className="action-icon"
+              aria-label="Save as unpublished"
+              title="Save as unpublished"
               disabled={busy}
             >
-              Save as unpublished
+              <Save size={18} />
             </button>
             <button
               type="submit"
               name="intent"
               value="publish"
-              className="button"
+              className="action-icon primary"
+              aria-label={
+                busy
+                  ? "Saving changes"
+                  : product?.published
+                    ? "Save and publish changes"
+                    : "Publish product"
+              }
+              title={
+                product?.published
+                  ? "Save and publish changes"
+                  : "Publish product"
+              }
               disabled={busy}
             >
-              {busy
-                ? "Saving…"
-                : product?.published
-                  ? "Save & publish changes"
-                  : "Publish product"}
+              {busy ? <LoaderCircle size={18} /> : <Upload size={18} />}
             </button>
           </div>
         </div>

@@ -16,7 +16,9 @@ export default async function StorefrontLayout({
           Skip to content
         </a>
         <Header storeName={settings.name} />
-        <main id="main">{children}</main>
+        <main id="main" className="storefront-main">
+          {children}
+        </main>
         <footer>
           <div className="footer-top">
             <div>

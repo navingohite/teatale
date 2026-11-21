@@ -7,6 +7,22 @@ export async function requireAdmin() {
   if (!s || s.user.role !== "admin") throw Error("Unauthorized");
   return s.user;
 }
+export const packSchema = z
+  .object({
+    id: z.string().optional(),
+    weight: z.number().int().positive().max(100000),
+    price: z.number().int().positive().nullable(),
+    mrp: z.number().int().positive().nullable(),
+    stock: z.number().int().nonnegative().nullable(),
+  })
+  .superRefine((p, ctx) => {
+    if (p.mrp != null && p.price != null && p.mrp < p.price)
+      ctx.addIssue({
+        code: "custom",
+        path: ["mrp"],
+        message: "Pack MRP must be at least its selling price.",
+      });
+  });
 export const productSchema = z
   .object({
     name: z.string().min(2).max(150),
@@ -16,10 +32,13 @@ export const productSchema = z
     type: z.enum(["Green Tea", "Black Tea", "Herbal Infusions"]),
     status: z.enum(["DRAFT", "COMING_SOON", "AVAILABLE", "OUT_OF_STOCK"]),
     price: z.number().int().positive().nullable(),
+    mrp: z.number().int().positive().nullable().optional(),
     stock: z.number().int().min(0).nullable(),
     weight: z.number().int().positive().nullable(),
     bestBefore: z.number().int().positive().nullable(),
-    image: z.string().regex(/^\/teas\/(?:jars\/)?[a-zA-Z0-9_.-]+\.(webp|png|jpg|jpeg)$/),
+    image: z
+      .string()
+      .regex(/^\/teas\/(?:jars\/)?[a-zA-Z0-9_.-]+\.(webp|png|jpg|jpeg)$/),
     summary: z.string().max(3000),
     taste: z.string().max(2000),
     origin: z.string().max(2000).nullable(),
@@ -30,8 +49,24 @@ export const productSchema = z
     claims: z.string().max(10000),
     published: z.boolean().default(false),
     archived: z.boolean().default(false),
+    variants: z.array(packSchema).max(20).optional(),
   })
   .superRefine((p, ctx) => {
+    if (
+      p.variants &&
+      new Set(p.variants.map((v) => v.weight)).size !== p.variants.length
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["variants"],
+        message: "Each pack size must have a unique weight.",
+      });
+    if (p.mrp != null && p.price != null && p.mrp < p.price)
+      ctx.addIssue({
+        code: "custom",
+        path: ["mrp"],
+        message: "MRP must be greater than or equal to the selling price.",
+      });
     if (p.published && p.status === "DRAFT")
       ctx.addIssue({
         code: "custom",
@@ -41,7 +76,10 @@ export const productSchema = z
     if (
       p.published &&
       p.status === "AVAILABLE" &&
-      (!p.price || p.stock === null || !p.weight)
+      (p.variants !== undefined
+        ? !p.variants.length ||
+          p.variants.some((v) => !v.price || v.stock === null)
+        : !p.price || p.stock === null || !p.weight)
     )
       ctx.addIssue({
         code: "custom",

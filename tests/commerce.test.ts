@@ -330,3 +330,169 @@ test("publication lifecycle gates buying and deletion preserves order history", 
     /price/,
   );
 });
+
+test("MRP validation and discounts preserve the selling price used at checkout", async () => {
+  const { discountPercent } = await import("../src/lib/format");
+  const { saveProduct } = await import("../src/lib/products");
+  const { id: _id, ...base } = catalogue[0];
+  const input = {
+    ...base,
+    slug: "mrp-test",
+    sku: "QA-MRP",
+    price: 19900,
+    mrp: 24900,
+    stock: 10,
+    published: true,
+  };
+  assert.equal(
+    productSchema.safeParse({ ...input, mrp: 19800 }).success,
+    false,
+  );
+  assert.equal(productSchema.safeParse({ ...input, mrp: 0 }).success, false);
+  assert.equal(discountPercent(19900, 24900), 20);
+  assert.equal(discountPercent(19900, 19900), 0);
+  assert.equal(discountPercent(19900, null), 0);
+  const p = await saveProduct(input, "test-admin");
+  assert.equal(p.mrp, 24900);
+  const q = await quote([{ id: p.id, quantity: 1, price: 19900 }], "462001");
+  assert.equal(q.subtotal, 19900);
+  const cleared = await saveProduct(
+    { ...p, variants: undefined, mrp: null },
+    "test-admin",
+  );
+  assert.equal(cleared.mrp, null);
+});
+
+test("pack sizes have independent prices, stock, cart identity and historical order snapshots", async () => {
+  const { saveProduct } = await import("../src/lib/products");
+  const { packInclude } = await import("../src/lib/packs");
+  const { id: _id, ...base } = catalogue[0];
+  const variants = [
+    { weight: 500, price: 49900, mrp: 59900, stock: 3 },
+    { weight: 1000, price: 89900, mrp: 99900, stock: 1 },
+    { weight: 2000, price: 169900, mrp: 189900, stock: 0 },
+  ];
+  const body = {
+    ...base,
+    slug: "pack-test",
+    sku: "QA-PACK",
+    variants,
+    price: null,
+    mrp: null,
+    stock: null,
+    weight: null,
+  };
+  assert.equal(
+    productSchema.safeParse({ ...body, variants: [variants[0], variants[0]] })
+      .success,
+    false,
+  );
+  assert.equal(
+    productSchema.safeParse({
+      ...body,
+      variants: [{ ...variants[0], mrp: 100 }],
+    }).success,
+    false,
+  );
+  const p = await saveProduct(body, "test-admin");
+  const [small, large, empty] = p.variants;
+  const lines = [
+    { id: p.id, variantId: small.id, quantity: 1, price: small.price! },
+    { id: p.id, variantId: large.id, quantity: 1, price: large.price! },
+  ];
+  assert.equal(cartSchema.safeParse(lines).success, true);
+  assert.equal(cartSchema.safeParse([lines[0], lines[0]]).success, false);
+  await assert.rejects(
+    () => quote([{ ...lines[0], variantId: undefined }], address.pin),
+    /unavailable/,
+  );
+  await assert.rejects(
+    () => quote([{ ...lines[0], id: productId }], address.pin),
+    /unavailable/,
+  );
+  await assert.rejects(
+    () => quote([{ ...lines[0], price: 19900 }], address.pin),
+    /changed/,
+  );
+  await assert.rejects(
+    () =>
+      quote(
+        [{ ...lines[0], variantId: empty.id, price: empty.price! }],
+        address.pin,
+      ),
+    /stock/,
+  );
+  const q = await quote(lines, address.pin);
+  assert.equal(q.subtotal, 139800);
+  assert.deepEqual(
+    q.lines.map((i) => i.weight),
+    [500, 1000],
+  );
+  const attempt = () =>
+    createOrder({
+      items: [lines[1]],
+      address,
+      method: "COD",
+      key: randomUUID(),
+      expectedTotal: 94900,
+    });
+  const results = await Promise.allSettled([attempt(), attempt()]);
+  assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(
+    (await db.productVariant.findUniqueOrThrow({ where: { id: large.id } }))
+      .stock,
+    0,
+  );
+  assert.equal(
+    (await db.productVariant.findUniqueOrThrow({ where: { id: small.id } }))
+      .stock,
+    3,
+  );
+  const reservation = await createOrder({
+    items: [lines[0]],
+    address,
+    method: "TEST",
+    key: randomUUID(),
+    expectedTotal: 54900,
+  });
+  assert.equal(
+    (await db.productVariant.findUniqueOrThrow({ where: { id: small.id } }))
+      .stock,
+    2,
+  );
+  await saveProduct(
+    { ...body, id: p.id, variants: [{ ...large, stock: 0 }] },
+    "test-admin",
+  );
+  await assert.rejects(() => quote([lines[0]], address.pin), /unavailable/);
+  await db.order.update({
+    where: { id: reservation.id },
+    data: { expiresAt: new Date(0) },
+  });
+  await expireReservations();
+  await expireReservations();
+  const released = await db.productVariant.findUniqueOrThrow({
+    where: { id: small.id },
+  });
+  assert.equal(released.stock, 3);
+  assert.equal(released.archived, true);
+  const historical = await db.orderItem.findFirstOrThrow({
+    where: { orderId: reservation.id },
+  });
+  assert.equal(historical.variantId, small.id);
+  assert.equal(historical.weight, 500);
+  assert.equal(historical.price, 49900);
+  const fresh = await db.product.findUniqueOrThrow({
+    where: { id: p.id },
+    include: packInclude,
+  });
+  assert.equal(fresh.variants.filter((v) => !v.archived).length, 1);
+  await assert.rejects(
+    () =>
+      saveProduct(
+        { ...body, id: p.id, variants: [{ ...large, id: small.id }] },
+        "test-admin",
+      ),
+    /weight changed/,
+  );
+});

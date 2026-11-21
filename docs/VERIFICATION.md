@@ -57,3 +57,18 @@ Before launch, review the business-input checklist in README.md and CATALOGUE-RE
 Ten database tests pass, including the publication lifecycle: unpublished products cannot be bought; published Available products can; Coming Soon remains non-purchasable; deleting retains order history; restoring leaves the product unpublished. Existing catalogue visibility is preserved by the publication migration.
 
 Browser verification created a temporary QA product through Add Product, cancelled a save confirmation, saved privately (public detail returned 404), published Coming Soon, edited to Available, verified missing-price validation, supplied test price/stock/weight, and published. Buy Now added it to guest checkout. The cart test item was removed. Delete cancellation retained the row; confirmed Delete moved it to Deleted products; Restore returned it as unpublished. The temporary product was then removed without changing the original 16 teas. Confirmation and form screenshots are in qa-product-confirmation.jpg and qa-product-form.jpg. Type checking and the production build pass.
+
+## Pack sizes — 21 November 2026
+
+- Added optional per-pack MRP, selling price and stock with gram-based sizes displayed as g/kg. Existing sized products are migrated without changing commercial values.
+- 12 commerce tests pass, including unique-size validation, cross-product pack rejection, missing pack rejection, separate cart lines, independent stock, concurrent last-pack purchasing, removed pack rejection, reservation release and historical order snapshots.
+- Browser QA used a temporary product: selected 500g and 1kg, added both to bag, verified separate checkout lines, and confirmed a zero-stock 2kg pack cannot be bought. Admin pack editor exposes separate fields and confirmation before saving.
+- Typecheck passes. Production build passes with `next build --webpack`; Turbopack build encountered an environment port-binding restriction in its CSS worker.
+
+## Storefront polish — 21 November 2026
+
+- Home and Shop cards use full-width single-column layouts on mobile and four columns on desktop. Contained images, compact descriptions and spacing reduce card heights; status and discount tags occupy a reserved image strip without covering artwork.
+- Add-to-bag toast was verified at desktop top-right and mobile bottom, including four-second dismissal, close action and View Bag navigation.
+- Cart quantity steppers update totals and keep pack sizes separate. Compact rows, icon actions with accessible labels, square buttons and consistent form controls were checked on desktop and mobile.
+- Light ivory storefront header is fixed at 64px desktop / 60px mobile; content offsets and mobile menu alignment were verified. Brand images share 120 × 48px bounds across header, footer and admin.
+- Screenshots in this folder document the UI checks. Temporary QA products and browser cart entries were removed after testing; owner catalogue edits were preserved.

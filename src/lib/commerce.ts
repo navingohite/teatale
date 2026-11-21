@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "./db";
+import { packInclude, selectedPack, cartKey } from "./packs";
 import { hash, secret, testMode, signature } from "./security";
 export const cartSchema = z
   .array(
     z.object({
       id: z.string(),
+      variantId: z.string().min(1).optional(),
       quantity: z.number().int().min(1).max(20),
       price: z.number().int().positive(),
     }),
@@ -13,7 +15,7 @@ export const cartSchema = z
   .min(1)
   .max(30)
   .refine(
-    (a) => new Set(a.map((x) => x.id)).size === a.length,
+    (a) => new Set(a.map(cartKey)).size === a.length,
     "Duplicate cart items",
   );
 export const addressSchema = z.object({
@@ -45,9 +47,11 @@ export async function quote(
     throw Error("This PIN code is not currently serviceable.");
   const products = await tx.product.findMany({
     where: { id: { in: items.map((i) => i.id) } },
+    include: packInclude,
   });
   const lines = items.map((i) => {
-    const p = products.find((p) => p.id === i.id);
+    const product = products.find((p) => p.id === i.id);
+    const p = product ? selectedPack(product, i.variantId) : null;
     if (
       !p ||
       !p.published ||
@@ -65,8 +69,9 @@ export async function quote(
       );
     return {
       productId: p.id,
+      variantId: i.variantId ?? null,
       name: p.name,
-      sku: p.sku,
+      sku: i.variantId ? `${p.sku}-${p.weight}G` : p.sku,
       weight: p.weight,
       price: p.price,
       quantity: i.quantity,
@@ -94,6 +99,37 @@ export async function quote(
     estimate: settings.estimate,
   };
 }
+export async function adjustStock(
+  tx: Prisma.TransactionClient,
+  item: { productId: string; variantId?: string | null; weight?: number },
+  delta: number,
+) {
+  const variantId =
+    item.variantId ||
+    (item.weight
+      ? (
+          await tx.productVariant.findUnique({
+            where: {
+              productId_weight: {
+                productId: item.productId,
+                weight: item.weight,
+              },
+            },
+          })
+        )?.id
+      : undefined);
+  if (variantId) {
+    await tx.productVariant.update({
+      where: { id: variantId },
+      data: { stock: { increment: delta } },
+    });
+  } else {
+    await tx.product.update({
+      where: { id: item.productId },
+      data: { stock: { increment: delta } },
+    });
+  }
+}
 export async function expireReservations() {
   await db.$transaction(async (tx) => {
     const expired = await tx.$queryRaw<
@@ -105,11 +141,7 @@ export async function expireReservations() {
         data: { payment: "EXPIRED", fulfilment: "CANCELLED" },
         include: { items: true },
       });
-      for (const i of o.items)
-        await tx.product.update({
-          where: { id: i.productId },
-          data: { stock: { increment: i.quantity } },
-        });
+      for (const i of o.items) await adjustStock(tx, i, i.quantity);
       await tx.audit.create({
         data: {
           actor: "reservation-worker",
@@ -160,11 +192,7 @@ export async function createOrder(input: z.infer<typeof checkoutSchema>) {
         throw Error("Your total has changed. Review delivery charges again.");
       if (!q.methods.includes(input.method))
         throw Error("This payment method is unavailable.");
-      for (const item of q.lines)
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        });
+      for (const item of q.lines) await adjustStock(tx, item, -item.quantity);
       const o = await tx.order.create({
         data: {
           number: `TT-${secret().slice(0, 10).toUpperCase()}`,

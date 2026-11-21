@@ -113,3 +113,9 @@ The test suite clears data only in the explicitly supplied `_test` database. Nev
 Before launch, supply actual launch prices/stock; verify suppliers, geographic names, ingredients/allergens, organic/health/nutrition claims and FSSAI; approve final artwork and policies; confirm registered business/address details; configure serviceable PINs, charges, estimates, COD/prepaid, SMTP, durable uploads and scheduled worker; set a production domain/canonical origin, HTTPS and secure database/backups; create the owner admin; remove local test mode; exercise Razorpay test payments/webhooks/refunds and real email deliverability. Review data retention and operational reconciliation procedures. Deployment is intentionally not performed.
 
 Integration references: [Better Auth email/password](https://better-auth.com/docs/authentication/email-password), [Prisma and Better Auth](https://www.prisma.io/docs/guides/authentication/better-auth/nextjs), [Razorpay Standard Checkout](https://github.com/razorpay/markdown-docs/blob/master/payments/payment-gateway/web-integration/standard.md).
+
+### Product pack sizes
+
+In **Admin → Products → Edit → Pack sizes**, add weights in grams (500, 1000, 2000), with each pack’s selling price, optional MRP and stock. Save/publish confirms the change. Available products need at least one configured pack; stock zero keeps a size visible but unavailable. Existing pack weights are fixed; remove and add a size to change weight. Removing a size preserves historical orders.
+
+Customers select a pack on the product page. Price and discount follow that size, and the bag treats different sizes as separate lines. Checkout validates the selected pack server-side and reserves only its stock. Cancellation, refund and expiry release stock back to the same pack. Product cards show the lowest available pack price as “From”. Run `npm run db:migrate` and `npx prisma generate` when updating an existing checkout.

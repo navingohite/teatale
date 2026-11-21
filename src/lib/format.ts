@@ -4,6 +4,14 @@ export const money = (paise: number) =>
     currency: "INR",
     maximumFractionDigits: 2,
   }).format(paise / 100);
+export function discountPercent(
+  price: number | null,
+  mrp: number | null | undefined,
+) {
+  return price != null && mrp != null && mrp > price
+    ? Math.floor(((mrp - price) * 100) / mrp)
+    : 0;
+}
 export function availability(p: {
   status: string;
   published?: boolean;

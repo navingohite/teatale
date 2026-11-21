@@ -2,7 +2,20 @@ import "dotenv/config";
 import { db } from "../src/lib/db";
 import { catalogue, initialContent } from "../src/lib/catalogue";
 for (const p of catalogue)
-  await db.product.upsert({ where: { id: p.id }, create: p, update: {} });
+  await db.product.upsert({
+    where: { id: p.id },
+    create: {
+      ...p,
+      ...(p.weight
+        ? {
+            variants: {
+              create: { weight: p.weight, price: p.price, stock: p.stock },
+            },
+          }
+        : {}),
+    },
+    update: {},
+  });
 for (const c of initialContent)
   await db.content.upsert({ where: { key: c.key }, create: c, update: {} });
 await db.settings.upsert({

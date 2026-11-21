@@ -1,3 +1,9 @@
+import {
+  packInclude,
+  displayProduct,
+  activePacks,
+  packLabel,
+} from "@/lib/packs";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -9,7 +15,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const p = await db.product.findUnique({ where: { slug } });
+  const p = await db.product.findUnique({
+    where: { slug },
+    include: packInclude,
+  });
   if (!p || !p.published || p.archived || p.status === "DRAFT")
     return { title: "Tea not found", robots: { index: false } };
   return {
@@ -24,7 +33,10 @@ export default async function Tea({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const p = await db.product.findUnique({ where: { slug } });
+  const p = await db.product.findUnique({
+    where: { slug },
+    include: packInclude,
+  });
   if (!p || !p.published || p.archived || p.status === "DRAFT") notFound();
   return (
     <section className="section">
@@ -37,7 +49,15 @@ export default async function Tea({
           <p className="eyebrow">{p.type}</p>
           <h1>{p.name}</h1>
           <p className="lead">{p.summary}</p>
-          {p.weight && <p>{p.weight} g · Loose leaf</p>}
+          {activePacks(p).length > 1 ? (
+            <p>
+              {activePacks(p)
+                .map((v) => packLabel(v.weight))
+                .join(" · ")}
+            </p>
+          ) : (
+            p.weight && <p>{packLabel(p.weight)} · Loose leaf</p>
+          )}
           <AddToCart p={{ ...p, claims: "" }} />
           <div className="product-notes">
             <h3>Taste & aroma</h3>

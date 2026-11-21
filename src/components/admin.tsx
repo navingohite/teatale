@@ -1,4 +1,5 @@
 "use client";
+import { Save, KeyRound, LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { useConfirmation } from "./confirm-action";
 import { createAuthClient } from "better-auth/react";
@@ -109,7 +110,13 @@ export function PasswordChange() {
           autoComplete="new-password"
         />
       </label>
-      <button className="button">Update password</button>
+      <button
+        className="action-icon primary"
+        aria-label="Update password"
+        title="Update password"
+      >
+        <KeyRound size={18} />
+      </button>
       <p role="status">{msg}</p>
     </form>
   );
@@ -217,8 +224,13 @@ export function AdminForm({
           )}
         </label>
       ))}
-      <button className="button" disabled={busy}>
-        {busy ? "Saving…" : "Save changes"}
+      <button
+        className="action-icon primary"
+        disabled={busy}
+        aria-label={busy ? "Saving changes" : "Save changes"}
+        title="Save changes"
+      >
+        {busy ? <LoaderCircle size={18} /> : <Save size={18} />}
       </button>
       <p role="status" className="wide error">
         {msg}

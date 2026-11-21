@@ -1,7 +1,9 @@
 "use client";
+import { cartKey, packLabel } from "@/lib/packs";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { api, useCart } from "./store";
 import { money } from "@/lib/format";
 type Quote = {
@@ -277,9 +279,10 @@ export function Checkout() {
       <aside className="order-summary">
         <p className="eyebrow">IN YOUR BAG</p>
         {items.map((i) => (
-          <p className="summary-line" key={i.id}>
+          <p className="summary-line" key={cartKey(i)}>
             <span>
-              {i.name} × {i.quantity}
+              {i.name}
+              {i.weight ? ` · ${packLabel(i.weight)}` : ""} × {i.quantity}
             </span>
             <strong>{money(i.price * i.quantity)}</strong>
           </p>
@@ -301,7 +304,14 @@ export function Checkout() {
           Secure guest checkout.
           <br />A little mountain stillness is on its way.
         </p>
-        <Link href="/cart">Edit your bag</Link>
+        <Link
+          href="/cart"
+          className="action-icon"
+          aria-label="Edit your bag"
+          title="Edit your bag"
+        >
+          <Pencil size={18} />
+        </Link>
       </aside>
     </div>
   );

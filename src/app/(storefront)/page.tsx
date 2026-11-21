@@ -1,3 +1,4 @@
+import { packInclude } from "@/lib/packs";
 import Link from "next/link";
 import { Leaf, Sun, Flame } from "lucide-react";
 import { db } from "@/lib/db";
@@ -6,6 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { alternates: { canonical: "/" } };
 export default async function Home() {
   const products = await db.product.findMany({
+    include: packInclude,
     where: { published: true, archived: false, status: { not: "DRAFT" } },
     orderBy: { position: "asc" },
   });

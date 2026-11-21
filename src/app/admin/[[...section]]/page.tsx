@@ -1,3 +1,4 @@
+import { packInclude, displayProduct } from "@/lib/packs";
 import { ProductsAdmin } from "@/components/products-admin";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
@@ -39,7 +40,12 @@ export default async function Admin({
   const settings = await db.settings.findUniqueOrThrow({
     where: { id: "store" },
   });
-  const products = await db.product.findMany({ orderBy: { position: "asc" } });
+  const products = (
+    await db.product.findMany({
+      include: packInclude,
+      orderBy: { position: "asc" },
+    })
+  ).map(displayProduct);
   const { q = "" } = await searchParams;
   const orders = await db.order.findMany({
     where: q
