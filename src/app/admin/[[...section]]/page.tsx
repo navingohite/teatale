@@ -1,66 +1,15 @@
+import { ProductsAdmin } from "@/components/products-admin";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
-import {
-  AdminForm,
-  Logout,
-  PasswordChange,
-  OrderActions,
-} from "@/components/admin";
+import { AdminForm, PasswordChange, OrderActions } from "@/components/admin";
 import { money, availability } from "@/lib/format";
 export const metadata = {
   title: "Tea Tale Admin",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
-const productFields = [
-  { key: "name", label: "Product name" },
-  { key: "slug", label: "Slug" },
-  { key: "sku", label: "SKU" },
-  { key: "position", label: "Catalogue order", type: "number" },
-  {
-    key: "type",
-    label: "Tea type",
-    options: ["Green Tea", "Black Tea", "Herbal Infusions"],
-  },
-  {
-    key: "status",
-    label: "Status",
-    options: ["DRAFT", "COMING_SOON", "AVAILABLE", "OUT_OF_STOCK"],
-  },
-  ...["price", "stock", "weight", "bestBefore"].map((key) => ({
-    key,
-    label: (
-      {
-        price: "Price (integer paise)",
-        stock: "Stock (packs)",
-        weight: "Pack weight (grams)",
-        bestBefore: "Best before (months from packing)",
-      } as Record<string, string>
-    )[key],
-    type: "number",
-  })),
-  { key: "image", label: "Photo / artwork path under /teas/" },
-  ...[
-    "summary",
-    "taste",
-    "origin",
-    "ingredients",
-    "caffeine",
-    "brewing",
-    "storage",
-    "claims",
-  ].map((key) => ({
-    key,
-    label:
-      key === "claims"
-        ? "Internal claims and source review (never public)"
-        : key[0].toUpperCase() + key.slice(1),
-    type: "textarea",
-  })),
-  { key: "archived", label: "Archived", type: "boolean" },
-];
 export default async function Admin({
   params,
   searchParams,
@@ -112,336 +61,265 @@ export default async function Admin({
       p.status === "AVAILABLE" && (!p.price || p.stock === null || !p.weight),
   );
   return (
-    <div className="admin-shell">
-      <aside className="admin-nav">
-        {[
-          ["dashboard", "Dashboard"],
-          ["products", "Products"],
-          ["orders", "Orders"],
-          ["content", "Website Content"],
-          ["shipping", "Shipping"],
-          ["payments", "Payments"],
-          ["settings", "Settings"],
-        ].map(([id, label]) => (
-          <Link key={id} href={"/admin/" + id}>
-            {label}
-          </Link>
-        ))}
-        <Logout />
-      </aside>
-      <section className="admin-main">
-        <p className="eyebrow">TEA TALE · STORE OPERATIONS</p>
-        <h1>
-          {tab === "content"
-            ? "Website Content"
-            : tab[0].toUpperCase() + tab.slice(1)}
-        </h1>
-        {tab === "dashboard" && (
-          <>
-            <div className="stats">
-              <div>
-                New orders
-                <strong>
-                  {await db.order.count({ where: { fulfilment: "NEW" } })}
-                </strong>
-              </div>
-              <div>
-                Pending shipments
-                <strong>
-                  {await db.order.count({
-                    where: {
-                      fulfilment: "NEW",
-                      payment: { in: ["PAID", "COD_DUE"] },
-                    },
-                  })}
-                </strong>
-              </div>
-              <div>
-                Paid sales
-                <strong>
-                  {money(
-                    (
-                      await db.order.aggregate({
-                        _sum: { total: true },
-                        where: { payment: "PAID" },
-                      })
-                    )._sum.total || 0,
-                  )}
-                </strong>
-              </div>
-              <div>
-                Low stock
-                <strong>
-                  {
-                    products.filter(
-                      (p) => p.stock !== null && p.stock < 5 && !p.archived,
-                    ).length
-                  }
-                </strong>
-              </div>
+    <div className="admin-page">
+      <p className="eyebrow">TEA TALE · STORE OPERATIONS</p>
+      <h1>
+        {tab === "content"
+          ? "Website Content"
+          : tab[0].toUpperCase() + tab.slice(1)}
+      </h1>
+      {tab === "dashboard" && (
+        <>
+          <div className="stats">
+            <div>
+              New orders
+              <strong>
+                {await db.order.count({ where: { fulfilment: "NEW" } })}
+              </strong>
             </div>
-            <div className="admin-card">
-              <h2>Launch checklist</h2>
-              <p>
-                {setup.length} launch products require price / inventory setup.
-              </p>
-              <p>
-                {contents.filter((c) => !c.approved).length} content pages need
-                approval.
-              </p>
-              <p>
-                Serviceable PINs: {settings.pins || "Not configured"} · COD:{" "}
-                {settings.cod ? "Enabled" : "Disabled"} · Prepaid:{" "}
-                {settings.prepaid ? "Enabled" : "Disabled"}
-              </p>
-              <p>
-                Review catalogue geographic names, actual suppliers, organic
-                certification, label claims, ingredients, allergens and FSSAI.
-                The preserved original artwork is not approved for publication.
-              </p>
-              <p>
-                Email: {process.env.SMTP_URL ? "Configured" : "Not configured"}{" "}
-                · Razorpay:{" "}
-                {process.env.RAZORPAY_KEY_ID ? "Configured" : "Not configured"}
-              </p>
+            <div>
+              Pending shipments
+              <strong>
+                {await db.order.count({
+                  where: {
+                    fulfilment: "NEW",
+                    payment: { in: ["PAID", "COD_DUE"] },
+                  },
+                })}
+              </strong>
             </div>
-            <h2>Low-stock teas</h2>
-            {products
-              .filter((p) => p.stock !== null && p.stock < 5 && !p.archived)
-              .map((p) => (
-                <p key={p.id}>
-                  {p.name}: {p.stock} packs
+            <div>
+              Paid sales
+              <strong>
+                {money(
+                  (
+                    await db.order.aggregate({
+                      _sum: { total: true },
+                      where: { payment: "PAID" },
+                    })
+                  )._sum.total || 0,
+                )}
+              </strong>
+            </div>
+            <div>
+              Low stock
+              <strong>
+                {
+                  products.filter(
+                    (p) => p.stock !== null && p.stock < 5 && !p.archived,
+                  ).length
+                }
+              </strong>
+            </div>
+          </div>
+          <div className="admin-card">
+            <h2>Launch checklist</h2>
+            <p>
+              {setup.length} launch products require price / inventory setup.
+            </p>
+            <p>
+              {contents.filter((c) => !c.approved).length} content pages need
+              approval.
+            </p>
+            <p>
+              Serviceable PINs: {settings.pins || "Not configured"} · COD:{" "}
+              {settings.cod ? "Enabled" : "Disabled"} · Prepaid:{" "}
+              {settings.prepaid ? "Enabled" : "Disabled"}
+            </p>
+            <p>
+              Review catalogue geographic names, actual suppliers, organic
+              certification, label claims, ingredients, allergens and FSSAI. The
+              preserved original artwork is not approved for publication.
+            </p>
+            <p>
+              Email: {process.env.SMTP_URL ? "Configured" : "Not configured"} ·
+              Razorpay:{" "}
+              {process.env.RAZORPAY_KEY_ID ? "Configured" : "Not configured"}
+            </p>
+          </div>
+          <h2>Low-stock teas</h2>
+          {products
+            .filter((p) => p.stock !== null && p.stock < 5 && !p.archived)
+            .map((p) => (
+              <p key={p.id}>
+                {p.name}: {p.stock} packs
+              </p>
+            ))}
+        </>
+      )}
+      {tab === "products" && <ProductsAdmin products={products} />}
+      {tab === "orders" && (
+        <>
+          <form className="inline-form">
+            <label>
+              Search number, email or name
+              <input name="q" defaultValue={q} />
+            </label>
+            <button className="button">Search</button>
+          </form>
+          {orders.map((o) => (
+            <details className="admin-card" key={o.id}>
+              <summary>
+                {o.number} · {money(o.total)} · {o.payment} / {o.fulfilment}
+              </summary>
+              <p>
+                {o.name} · {o.email} · {o.phone}
+              </p>
+              <pre>{JSON.stringify(o.address, null, 2)}</pre>
+              {o.items.map((i) => (
+                <p key={i.id}>
+                  {i.name} · {i.weight} g × {i.quantity} ·{" "}
+                  {money(i.price * i.quantity)}
                 </p>
               ))}
-          </>
-        )}
-        {tab === "products" && (
-          <>
-            <p>
-              Blank commercial fields stay unset. Price is stored in paise: ₹250
-              = 25000. Original catalogue order is preserved.
-            </p>
-            {products.map((p) => (
-              <details className="admin-card" key={p.id}>
-                <summary>
-                  {p.position}. {p.name} ·{" "}
-                  {setup.some((s) => s.id === p.id)
-                    ? "Setup required"
-                    : availability(p)}{" "}
-                  {p.archived ? "· Archived" : ""}
-                </summary>
-                <p>
-                  <Link className="text-link" href={"/admin-preview/" + p.slug}>
-                    Preview public page
-                  </Link>
-                </p>
-                <img
-                  src={`/api/admin-art/${p.slug}`}
-                  alt={p.name + " catalogue artwork for internal review"}
-                  style={{ height: 150, width: "auto" }}
-                />
-                <AdminForm
-                  section="products"
-                  record={{ ...p, updatedAt: undefined }}
-                  fields={productFields}
-                />
-              </details>
-            ))}
-            <details className="admin-card">
-              <summary>Add a tea</summary>
+              <p>
+                Courier: {o.courier || "Not assigned"} · Tracking:{" "}
+                {o.tracking || "—"}
+              </p>
+              <p>Refund: {o.refundId || "None"}</p>
+              <OrderActions id={o.id} />
+            </details>
+          ))}
+          {!orders.length && <p>No orders found.</p>}
+        </>
+      )}
+      {tab === "content" && (
+        <>
+          {contents.map((c) => (
+            <details className="admin-card" key={c.key}>
+              <summary>
+                {c.key} ·{" "}
+                {c.approved ? "Approved" : "Draft — awaiting approval"}
+              </summary>
               <AdminForm
-                section="products"
-                record={{
-                  position: products.length + 1,
-                  status: "DRAFT",
-                  image: "/teas/himalayan-green-tea-label.webp",
-                  claims: "Review required",
-                  stock: null,
-                  price: null,
-                  weight: null,
-                  bestBefore: null,
-                  origin: null,
-                  ingredients: null,
-                  archived: false,
-                }}
-                fields={productFields}
+                section="content"
+                record={c}
+                fields={[
+                  { key: "title", label: "Heading" },
+                  {
+                    key: "image",
+                    label: "Optional banner image path under /teas/",
+                  },
+                  {
+                    key: "body",
+                    label: "Copy (blank lines separate paragraphs)",
+                    type: "textarea",
+                  },
+                  {
+                    key: "approved",
+                    label: "Approved for public display",
+                    type: "boolean",
+                  },
+                ]}
               />
             </details>
-          </>
-        )}
-        {tab === "orders" && (
-          <>
-            <form className="inline-form">
-              <label>
-                Search number, email or name
-                <input name="q" defaultValue={q} />
-              </label>
-              <button className="button">Search</button>
-            </form>
-            {orders.map((o) => (
-              <details className="admin-card" key={o.id}>
-                <summary>
-                  {o.number} · {money(o.total)} · {o.payment} / {o.fulfilment}
-                </summary>
-                <p>
-                  {o.name} · {o.email} · {o.phone}
-                </p>
-                <pre>{JSON.stringify(o.address, null, 2)}</pre>
-                {o.items.map((i) => (
-                  <p key={i.id}>
-                    {i.name} · {i.weight} g × {i.quantity} ·{" "}
-                    {money(i.price * i.quantity)}
-                  </p>
-                ))}
-                <p>
-                  Courier: {o.courier || "Not assigned"} · Tracking:{" "}
-                  {o.tracking || "—"}
-                </p>
-                <p>Refund: {o.refundId || "None"}</p>
-                <OrderActions id={o.id} />
-              </details>
-            ))}
-            {!orders.length && <p>No orders found.</p>}
-          </>
-        )}
-        {tab === "content" && (
-          <>
-            {contents.map((c) => (
-              <details className="admin-card" key={c.key}>
-                <summary>
-                  {c.key} ·{" "}
-                  {c.approved ? "Approved" : "Draft — awaiting approval"}
-                </summary>
-                <AdminForm
-                  section="content"
-                  record={c}
-                  fields={[
-                    { key: "title", label: "Heading" },
-                    {
-                      key: "image",
-                      label: "Optional banner image path under /teas/",
-                    },
-                    {
-                      key: "body",
-                      label: "Copy (blank lines separate paragraphs)",
-                      type: "textarea",
-                    },
-                    {
-                      key: "approved",
-                      label: "Approved for public display",
-                      type: "boolean",
-                    },
-                  ]}
-                />
-              </details>
-            ))}
-          </>
-        )}
-        {tab === "shipping" && (
+          ))}
+        </>
+      )}
+      {tab === "shipping" && (
+        <AdminForm
+          section="shipping"
+          record={settings}
+          fields={[
+            {
+              key: "pins",
+              label: "Serviceable PIN codes, separated by commas",
+              type: "textarea",
+            },
+            { key: "fee", label: "Delivery fee in paise", type: "number" },
+            {
+              key: "freeAbove",
+              label: "Free delivery threshold in paise (blank = disabled)",
+              type: "number",
+            },
+            { key: "estimate", label: "Owner-approved delivery estimate" },
+          ]}
+        />
+      )}
+      {tab === "payments" && (
+        <>
           <AdminForm
-            section="shipping"
+            section="payments"
             record={settings}
             fields={[
               {
-                key: "pins",
-                label: "Serviceable PIN codes, separated by commas",
-                type: "textarea",
+                key: "cod",
+                label: "Enable cash on delivery",
+                type: "boolean",
               },
-              { key: "fee", label: "Delivery fee in paise", type: "number" },
               {
-                key: "freeAbove",
-                label: "Free delivery threshold in paise (blank = disabled)",
-                type: "number",
+                key: "prepaid",
+                label: "Enable configured Razorpay prepaid",
+                type: "boolean",
               },
-              { key: "estimate", label: "Owner-approved delivery estimate" },
             ]}
           />
-        )}
-        {tab === "payments" && (
-          <>
-            <AdminForm
-              section="payments"
-              record={settings}
-              fields={[
-                {
-                  key: "cod",
-                  label: "Enable cash on delivery",
-                  type: "boolean",
-                },
-                {
-                  key: "prepaid",
-                  label: "Enable configured Razorpay prepaid",
-                  type: "boolean",
-                },
-              ]}
-            />
-            <p>
-              Provider keys and email credentials are configured only in the
-              server environment.
-            </p>
-            <div className="admin-list">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Order</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
-                    <th>Provider payment</th>
-                    <th>Refund</th>
+          <p>
+            Provider keys and email credentials are configured only in the
+            server environment.
+          </p>
+          <div className="admin-list">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Amount</th>
+                  <th>Payment</th>
+                  <th>Provider payment</th>
+                  <th>Refund</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((o) => (
+                  <tr key={o.id}>
+                    <td>{o.number}</td>
+                    <td>{money(o.total)}</td>
+                    <td>{o.payment}</td>
+                    <td>{o.providerPayment || "—"}</td>
+                    <td>{o.refundId || "—"}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {orders.map((o) => (
-                    <tr key={o.id}>
-                      <td>{o.number}</td>
-                      <td>{money(o.total)}</td>
-                      <td>{o.payment}</td>
-                      <td>{o.providerPayment || "—"}</td>
-                      <td>{o.refundId || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-        {tab === "settings" && (
-          <>
-            <AdminForm
-              section="settings"
-              record={settings}
-              fields={[
-                { key: "name", label: "Store name" },
-                { key: "email", label: "Public contact email", type: "email" },
-                { key: "instagram", label: "Instagram handle" },
-                {
-                  key: "featured",
-                  label: "Featured tea slugs, separated by commas",
-                },
-              ]}
-            />
-            <p>
-              Order sender:{" "}
-              {process.env.MAIL_FROM ||
-                "Configure MAIL_FROM and SMTP_URL on the server."}
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      {tab === "settings" && (
+        <>
+          <AdminForm
+            section="settings"
+            record={settings}
+            fields={[
+              { key: "name", label: "Store name" },
+              { key: "email", label: "Public contact email", type: "email" },
+              { key: "instagram", label: "Instagram handle" },
+              {
+                key: "featured",
+                label: "Featured tea slugs, separated by commas",
+              },
+            ]}
+          />
+          <p>
+            Order sender:{" "}
+            {process.env.MAIL_FROM ||
+              "Configure MAIL_FROM and SMTP_URL on the server."}
+          </p>
+          <PasswordChange />
+          <h2>Recent audit log</h2>
+          {(
+            await db.audit.findMany({
+              orderBy: { createdAt: "desc" },
+              take: 30,
+            })
+          ).map((a) => (
+            <p key={a.id}>
+              <small>
+                {a.createdAt.toISOString()} · {a.action} · {a.target}
+              </small>
             </p>
-            <PasswordChange />
-            <h2>Recent audit log</h2>
-            {(
-              await db.audit.findMany({
-                orderBy: { createdAt: "desc" },
-                take: 30,
-              })
-            ).map((a) => (
-              <p key={a.id}>
-                <small>
-                  {a.createdAt.toISOString()} · {a.action} · {a.target}
-                </small>
-              </p>
-            ))}
-          </>
-        )}
-      </section>
+          ))}
+        </>
+      )}
     </div>
   );
 }

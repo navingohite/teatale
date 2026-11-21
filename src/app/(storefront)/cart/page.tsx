@@ -8,7 +8,7 @@ export const metadata = {
 export default async function Cart() {
   return (
     <CartPage
-      products={(await db.product.findMany({ where: { archived: false } })).map(
+      products={(await db.product.findMany({ where: { published: true, archived: false } })).map(
         (p) => ({ ...p, claims: "" }),
       )}
     />

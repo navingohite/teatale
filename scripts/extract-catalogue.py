@@ -17,7 +17,7 @@ for el in E.fromstring(z.read('word/document.xml')).find('w:body',ns):
   (root/'assets/originals'/pathlib.Path(target).name).write_bytes(blob)
   im=Image.open(root/'assets/originals'/pathlib.Path(target).name).convert('RGB')
   for w in [480,960]:
-   cp=im.copy();cp.thumbnail((w,w*2));cp.save(root/f'assets/review/{current["slug"]}-{w}.webp',quality=85)
+   cp=im.copy();cp.thumbnail((w,w*2));cp.save(root/f'assets/review/{current["slug"]}-{w}.webp',quality=85);cp.save(root/f'public/teas/{current["slug"]}-poster-{w}.webp',quality=85)
   w,h=im.size
   label=im.crop((int(w*.085),int(h*.395),int(w*.93),int(h*.525)))
   label.save(root/f'public/teas/{current["slug"]}-label.webp',quality=90)

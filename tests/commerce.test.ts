@@ -254,3 +254,79 @@ test("repeat seed preserves owner edits including slug and SKU without duplicate
   assert.equal(p.sku, "OWNER-SKU");
   assert.equal(p.price, 35100);
 });
+
+test("publication lifecycle gates buying and deletion preserves order history", async () => {
+  const { saveProduct, changeProductState } =
+    await import("../src/lib/products");
+  const { id: _id, ...base } = catalogue[0];
+  const draft = await saveProduct(
+    {
+      ...base,
+      slug: "publication-test-tea",
+      sku: "QA-PUBLISH",
+      name: "Publication test tea",
+      status: "AVAILABLE",
+      published: false,
+      price: 19900,
+      stock: 4,
+    },
+    "test-admin",
+  );
+  const lines = [{ id: draft.id, quantity: 1, price: 19900 }];
+  await assert.rejects(() => quote(lines, address.pin), /unavailable/);
+  await changeProductState({ id: draft.id, action: "publish" }, "test-admin");
+  assert.equal((await quote(lines, address.pin)).total, 24900);
+  const order = await createOrder({
+    items: lines,
+    address,
+    method: "COD",
+    key: randomUUID(),
+    expectedTotal: 24900,
+  });
+  await changeProductState({ id: draft.id, action: "unpublish" }, "test-admin");
+  await assert.rejects(() => quote(lines, address.pin), /unavailable/);
+  await changeProductState({ id: draft.id, action: "delete" }, "test-admin");
+  assert.equal(
+    (
+      await db.order.findUniqueOrThrow({
+        where: { id: order.id },
+        include: { items: true },
+      })
+    ).items[0].name,
+    "Publication test tea",
+  );
+  assert.equal(
+    (await db.product.findUniqueOrThrow({ where: { id: draft.id } })).archived,
+    true,
+  );
+  await assert.rejects(
+    () => changeProductState({ id: draft.id, action: "publish" }, "test-admin"),
+    /Restore/,
+  );
+  await changeProductState({ id: draft.id, action: "restore" }, "test-admin");
+  const restored = await db.product.findUniqueOrThrow({
+    where: { id: draft.id },
+  });
+  assert.equal(restored.published, false);
+  assert.equal(restored.archived, false);
+  await saveProduct(
+    {
+      ...restored,
+      status: "COMING_SOON",
+      price: null,
+      stock: null,
+      weight: null,
+      published: true,
+    },
+    "test-admin",
+  );
+  await assert.rejects(() => quote(lines, address.pin), /unavailable/);
+  await assert.rejects(
+    () =>
+      saveProduct(
+        { ...restored, status: "AVAILABLE", price: null, published: true },
+        "test-admin",
+      ),
+    /price/,
+  );
+});

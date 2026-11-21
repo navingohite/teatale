@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
+import { useConfirmation } from "./confirm-action";
 import { createAuthClient } from "better-auth/react";
 const client = createAuthClient();
 export function Login() {
   const [error, setError] = useState("");
   return (
-    <div className="narrow">
+    <div className="admin-login-card">
       <p className="eyebrow">TEA TALE · TEAM ACCESS</p>
       <h1>Welcome back.</h1>
       <form
@@ -43,10 +44,19 @@ export function Login() {
   );
 }
 export function Logout() {
+  const confirm = useConfirmation();
   return (
     <button
       className="text-link"
       onClick={async () => {
+        if (
+          !(await confirm({
+            title: "Are you sure you want to sign out?",
+            message: "You can sign in again to continue managing your store.",
+            label: "Yes, sign out",
+          }))
+        )
+          return;
         await client.signOut();
         window.location.href = "/admin/login";
       }}
@@ -56,12 +66,21 @@ export function Logout() {
   );
 }
 export function PasswordChange() {
+  const confirm = useConfirmation();
   const [msg, setMsg] = useState("");
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
         const f = new FormData(e.currentTarget);
+        if (
+          !(await confirm({
+            title: "Are you sure you want to change your password?",
+            message: "Your other signed-in sessions will be revoked.",
+            label: "Yes, update password",
+          }))
+        )
+          return;
         const r = await client.changePassword({
           currentPassword: String(f.get("current")),
           newPassword: String(f.get("new")),
@@ -104,6 +123,7 @@ export function AdminForm({
   record: Record<string, unknown>;
   fields: { key: string; label: string; type?: string; options?: string[] }[];
 }) {
+  const confirm = useConfirmation();
   const [msg, setMsg] = useState(""),
     [busy, setBusy] = useState(false),
     [imagePath, setImagePath] = useState(String(record.image || ""));
@@ -112,7 +132,6 @@ export function AdminForm({
       className="admin-form"
       onSubmit={async (e) => {
         e.preventDefault();
-        setBusy(true);
         setMsg("");
         const data: Record<string, unknown> = { ...record };
         const f = new FormData(e.currentTarget);
@@ -127,6 +146,21 @@ export function AdminForm({
                   : Number(v)
                 : v;
         }
+        if (
+          !(await confirm({
+            title: "Are you sure?",
+            message:
+              section === "orders"
+                ? `Apply ${data.action} to this order?`
+                : "Save these changes to your store?",
+            label: "Yes, save changes",
+            danger:
+              section === "orders" &&
+              ["cancel", "refund"].includes(String(data.action)),
+          }))
+        )
+          return;
+        setBusy(true);
         try {
           const r = await fetch("/api/admin/" + section, {
             method: "POST",
@@ -211,7 +245,12 @@ export function OrderActions({ id }: { id: string }) {
   );
 }
 
-function PhotoUpload({ onUploaded }: { onUploaded: (path: string) => void }) {
+export function PhotoUpload({
+  onUploaded,
+}: {
+  onUploaded: (path: string) => void;
+}) {
+  const confirm = useConfirmation();
   const [message, setMessage] = useState("");
   return (
     <span>
@@ -222,6 +261,14 @@ function PhotoUpload({ onUploaded }: { onUploaded: (path: string) => void }) {
         onChange={async (e) => {
           const file = e.target.files?.[0];
           if (!file) return;
+          if (
+            !(await confirm({
+              title: "Are you sure you want to upload this image?",
+              message: `Upload ${file.name}? Save the product to use it on the website.`,
+              label: "Yes, upload",
+            }))
+          )
+            return;
           setMessage("Uploading…");
           try {
             const form = new FormData();

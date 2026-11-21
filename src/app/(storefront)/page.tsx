@@ -6,16 +6,20 @@ export const dynamic = "force-dynamic";
 export const metadata = { alternates: { canonical: "/" } };
 export default async function Home() {
   const products = await db.product.findMany({
-    where: { archived: false, status: { not: "DRAFT" } },
+    where: { published: true, archived: false, status: { not: "DRAFT" } },
     orderBy: { position: "asc" },
   });
   const content = await db.content.findUnique({ where: { key: "home" } });
   const settings = await db.settings.findUniqueOrThrow({
     where: { id: "store" },
   });
-  const featured = products.filter((p) =>
-    settings.featured.split(",").includes(p.slug),
+  const featuredSlugs = new Set(
+    settings.featured.split(",").map((slug) => slug.trim()),
   );
+  const featured = [
+    ...products.filter((p) => featuredSlugs.has(p.slug)),
+    ...products.filter((p) => !featuredSlugs.has(p.slug)),
+  ].slice(0, 4);
   return (
     <>
       <section className="hero">
@@ -92,25 +96,13 @@ export default async function Home() {
       </section>
       <section className="story-band">
         <div className="story-art">
-          <svg
-            viewBox="0 0 600 400"
-            aria-label="Illustration of Himalayan mountain ridges"
-            role="img"
-          >
-            <path
-              d="M0 300 170 90 245 190 350 40 600 320V400H0Z"
-              fill="#bcc1a6"
-            />
-            <path
-              d="m120 155 50-65 75 100-65-32-21 13ZM280 145l70-105 80 109-69-42-23 25Z"
-              fill="#f7f2e8"
-            />
-            <path
-              d="M0 390 160 230 280 320 460 170 600 300v100H0Z"
-              fill="#76866e"
-            />
-            <path d="m0 400 270-70 100 30 230-100v140Z" fill="#40583f" />
-          </svg>
+          <img
+            src="/images/tea-garden-himalayas.png"
+            alt="A tender tea shoot overlooking misty tea gardens and hills at sunrise"
+            width={1619}
+            height={971}
+            loading="lazy"
+          />
           <span>INSPIRED BY THE HILLS</span>
         </div>
         <div>

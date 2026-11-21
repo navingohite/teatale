@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
-import { ShoppingBag, Leaf, Menu, X, Minus, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingBag, Menu, X, Minus, Plus } from "lucide-react";
 import { money, availability } from "@/lib/format";
 import type { Product } from "@prisma/client";
 type Item = {
@@ -45,11 +46,13 @@ export function Header({ storeName = "Tea Tale" }: { storeName?: string }) {
       </div>
       <header>
         <Link href="/" className="brand">
-          <Leaf size={25} />
-          <span>
-            {storeName.toUpperCase()}
-            <small>TALES OF THE HIMALAYAS</small>
-          </span>
+          <img
+            className="brand-image"
+            src="/brand/tea-tale-logo.png"
+            alt={storeName}
+            width={1748}
+            height={677}
+          />
         </Link>
         <nav className={open ? "open" : ""} aria-label="Main navigation">
           {[
@@ -90,12 +93,34 @@ export function ProductImage({
   p: Pick<Product, "name" | "slug" | "type" | "image" | "claims">;
   large?: boolean;
 }) {
-  if (!p.image.includes("-label."))
+  if (p.image.includes("-poster-"))
     return (
-      <div className="product-art photograph">
+      <div className={`product-art catalogue-poster ${large ? "large" : ""}`}>
         <img
           src={p.image}
-          alt={`${p.name} product photograph`}
+          srcSet={`${p.image.replace("-960.webp", "-480.webp")} 480w, ${p.image} 960w`}
+          sizes={
+            large
+              ? "(max-width: 600px) 90vw, 45vw"
+              : "(max-width: 600px) 45vw, 33vw"
+          }
+          alt={`${p.name} — full poster from the Tea Tale Word catalogue`}
+          loading={large ? "eager" : "lazy"}
+        />
+      </div>
+    );
+  if (!p.image.includes("-label."))
+    return (
+      <div
+        className={`product-art photograph ${p.image.includes("/jars/") ? "jar-image" : ""} ${large ? "large" : ""}`}
+      >
+        <img
+          src={p.image}
+          alt={
+            p.image.includes("product-placeholder")
+              ? `${p.name} — product image coming soon`
+              : `${p.name} product photograph`
+          }
           loading={large ? "eager" : "lazy"}
         />
       </div>
@@ -130,17 +155,29 @@ export function ProductCard({ p }: { p: Product }) {
     <Link className="product-card" href={`/tea/${p.slug}`}>
       <div className="card-image">
         <ProductImage p={p} />
-        <span className="badge">
-          {p.weight ? `${p.weight} g · Loose leaf` : "Coming Soon"}
-        </span>
       </div>
       <div className="card-detail">
+        <div className="card-meta">
+          <span
+            className={`card-status ${status === "Available" ? "available" : ""}`}
+          >
+            {status}
+          </span>
+          {p.weight && <span>{p.weight} g · Loose leaf</span>}
+        </div>
         <small>{p.type}</small>
         <h3>{p.name}</h3>
         <p>{p.taste}</p>
         <div className="card-bottom">
-          <span>{status === "Available" ? money(p.price!) : status}</span>
-          <span className="text-link">Discover tea</span>
+          {status === "Available" && (
+            <span className="card-price">{money(p.price!)}</span>
+          )}
+          <span
+            className={`card-action ${status === "Available" ? "buy" : ""}`}
+          >
+            {status === "Available" ? "Buy Tea" : "Discover Tea"}{" "}
+            <span aria-hidden="true">↗</span>
+          </span>
         </div>
       </div>
     </Link>
@@ -175,9 +212,25 @@ export function ShopGrid({ products }: { products: Product[] }) {
   );
 }
 export function AddToCart({ p }: { p: Product }) {
+  const router = useRouter();
   const { items, setItems } = useCart();
   const [quantity, setQuantity] = useState(1),
     [message, setMessage] = useState("");
+  function add() {
+    const existing = items.find((i) => i.id === p.id);
+    const next = Math.min(p.stock!, 20, (existing?.quantity || 0) + quantity);
+    setItems([
+      ...items.filter((i) => i.id !== p.id),
+      {
+        id: p.id,
+        name: p.name,
+        image: p.image,
+        quantity: next,
+        price: p.price!,
+      },
+    ]);
+    setMessage("Added to your bag.");
+  }
   if (availability(p) !== "Available")
     return (
       <div className="availability">
@@ -224,31 +277,19 @@ export function AddToCart({ p }: { p: Product }) {
             <Plus size={16} />
           </button>
         </div>
-        <button
-          className="button add-button"
-          onClick={() => {
-            const existing = items.find((i) => i.id === p.id);
-            const next = Math.min(
-              p.stock!,
-              20,
-              (existing?.quantity || 0) + quantity,
-            );
-            setItems([
-              ...items.filter((i) => i.id !== p.id),
-              {
-                id: p.id,
-                name: p.name,
-                image: p.image,
-                quantity: next,
-                price: p.price!,
-              },
-            ]);
-            setMessage("Added to your bag.");
-          }}
-        >
+        <button className="button add-button" onClick={add}>
           Add to Bag <ShoppingBag size={17} />
         </button>
       </div>
+      <button
+        className="button secondary buy-now-button"
+        onClick={() => {
+          add();
+          router.push("/checkout");
+        }}
+      >
+        Buy Now
+      </button>
       <p role="status">
         {message} {message && <Link href="/cart">View bag</Link>}
       </p>

@@ -22,6 +22,7 @@ const ingredients = [
 export const catalogue = source.map((p) => ({
   id: `catalogue-${String(p.position).padStart(2, "0")}`,
   slug: p.slug,
+  published: true,
   name: p.name,
   sku: `TT-${String(p.position).padStart(3, "0")}`,
   position: p.position,
@@ -36,7 +37,7 @@ export const catalogue = source.map((p) => ({
   stock: null,
   weight: p.position <= 2 ? 100 : null,
   bestBefore: p.position <= 2 ? 12 : null,
-  image: p.image.replace("-960.webp", "-label.webp"),
+  image: `/teas/jars/${p.slug}.png`,
   summary: p.sourceFields.ABOUT.replace("from the hills of Darjeeling, ", "")
     .replace("from Himachal Pradesh, ", "")
     .replace("calming", "fragrant")

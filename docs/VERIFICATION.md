@@ -51,3 +51,9 @@ The worker must be scheduled at least once a minute. Late captured payments afte
 Uploads use the server filesystem and require a persistent/shared volume; ephemeral hosting needs a storage adapter. Courier details are entered by admins, not fetched from a courier API. Refund automation is limited to unshipped captured prepaid orders. Other return/refund decisions require the owner's approved policy and manual handling.
 
 Before launch, review the business-input checklist in README.md and CATALOGUE-REVIEW.md. This verification does not constitute approval of pricing, stock, policies, sourcing, certification or label claims.
+
+## Product management update — 21 November 2026
+
+Ten database tests pass, including the publication lifecycle: unpublished products cannot be bought; published Available products can; Coming Soon remains non-purchasable; deleting retains order history; restoring leaves the product unpublished. Existing catalogue visibility is preserved by the publication migration.
+
+Browser verification created a temporary QA product through Add Product, cancelled a save confirmation, saved privately (public detail returned 404), published Coming Soon, edited to Available, verified missing-price validation, supplied test price/stock/weight, and published. Buy Now added it to guest checkout. The cart test item was removed. Delete cancellation retained the row; confirmed Delete moved it to Deleted products; Restore returned it as unpublished. The temporary product was then removed without changing the original 16 teas. Confirmation and form screenshots are in qa-product-confirmation.jpg and qa-product-form.jpg. Type checking and the production build pass.

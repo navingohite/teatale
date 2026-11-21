@@ -9,7 +9,7 @@ export const metadata = {
 };
 export default async function Shop() {
   const products = await db.product.findMany({
-    where: { archived: false, status: { not: "DRAFT" } },
+    where: { published: true, archived: false, status: { not: "DRAFT" } },
     orderBy: { position: "asc" },
   });
   products.sort(

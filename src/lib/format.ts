@@ -6,10 +6,14 @@ export const money = (paise: number) =>
   }).format(paise / 100);
 export function availability(p: {
   status: string;
+  published?: boolean;
+  archived?: boolean;
   price: number | null;
   stock: number | null;
   weight: number | null;
 }) {
+  if (p.archived) return "Deleted";
+  if (p.published === false) return "Unpublished";
   if (p.status === "COMING_SOON") return "Coming Soon";
   if (p.status === "DRAFT") return "Draft";
   if (p.status === "OUT_OF_STOCK" || p.stock === 0) return "Out of Stock";

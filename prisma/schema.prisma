@@ -26,6 +26,7 @@ model Product {
  brewing String
  storage String
  claims String
+ published Boolean @default(false)
  archived Boolean @default(false)
  updatedAt DateTime @db.Timestamptz(3) @updatedAt
 }

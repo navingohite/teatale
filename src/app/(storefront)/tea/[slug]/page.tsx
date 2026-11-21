@@ -10,7 +10,7 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const p = await db.product.findUnique({ where: { slug } });
-  if (!p || p.archived || p.status === "DRAFT")
+  if (!p || !p.published || p.archived || p.status === "DRAFT")
     return { title: "Tea not found", robots: { index: false } };
   return {
     title: p.name,
@@ -25,7 +25,7 @@ export default async function Tea({
 }) {
   const { slug } = await params;
   const p = await db.product.findUnique({ where: { slug } });
-  if (!p || p.archived || p.status === "DRAFT") notFound();
+  if (!p || !p.published || p.archived || p.status === "DRAFT") notFound();
   return (
     <section className="section">
       <div className="breadcrumbs">

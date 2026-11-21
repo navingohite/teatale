@@ -49,7 +49,7 @@ See [the import review](docs/CATALOGUE-REVIEW.md). All names and catalogue order
 
 Seed upserts by an immutable catalogue ID and makes no updates to existing rows, so re-running it preserves changed slugs, SKUs, names, stock, prices and content. Product order items contain historical name, SKU, weight and price snapshots, independent of subsequent changes/archiving.
 
-Original image bytes are in `assets/originals`, full WebP derivatives in private `assets/review`, and public responsive name-only label crops in `public/teas`. These are artwork, not product photos. Full labels contain unapproved claims and are only viewable through authenticated admin routes. The source black tea image says “Classic Black Tea”; its document section is Himalayan Black Tea. This discrepancy is documented for the owner.
+All 16 products now use the owner-supplied jar PNGs in `public/teas/jars`, matched by product slug. Original catalogue images and full poster derivatives remain in `assets/originals`, `assets/review` and `public/teas` for reference. The supplied brand logos, favicon and tea-garden story image are used throughout the storefront and admin. Home and Shop show four product cards per desktop row.
 
 `python scripts/extract-catalogue.py /path/to/Tea_Tale_Catalogue.docx` regenerates the source JSON, transcript, images and contact sheet (requires Pillow). It does not mutate the database. The import was inspected against document table placement and the contact sheet.
 
@@ -58,7 +58,7 @@ Admin photo uploads accept PNG/JPEG/WebP up to 8 MB, decode and re-encode with S
 ## Operations
 
 - **Dashboard:** sales, new orders, pending shipments, low stock and launch checklist.
-- **Products:** create/edit/archive/preview, photos, commercial fields, brew details and private claims review. An Available product requires a positive integer price and weight plus non-negative stock. Zero stock cannot be purchased.
+- **Products:** searchable table with Add/Edit forms, image uploads, Preview, Publish/Unpublish, and recoverable Delete/Restore actions. Enter prices in INR; the server stores integer paise. Product status (Draft, Coming Soon, Available, Out of Stock) is separate from publication. New products stay private until Publish. Published Available products require price, weight and stock; zero stock cannot be purchased. Deleted products remain in Deleted products and restore as unpublished, preserving historical orders. Save, publish, unpublish, delete, restore, upload, password and other admin mutations use confirmation dialogs. Available product pages offer Add to Bag and Buy Now.
 - **Orders:** search by number/email/name, read address and immutable items, enter courier details, ship, deliver, record collected COD, cancel eligible unpaid/unshipped orders, or request/reconcile eligible prepaid refunds.
 - **Website Content:** headings, text, banner image and approval state. Draft policies are never published as accepted terms. Layout/navigation remain in code.
 - **Shipping:** exact serviceable six-digit PIN list, delivery fee, optional free-shipping threshold and owner-provided estimate. No delivery promises are invented.

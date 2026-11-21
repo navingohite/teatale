@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://127.0.0.1:3010";
   const products = await db.product.findMany({
-    where: { archived: false, status: { not: "DRAFT" } },
+    where: { published: true, archived: false, status: { not: "DRAFT" } },
   });
   return [
     ...[

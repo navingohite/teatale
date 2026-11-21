@@ -19,7 +19,7 @@ export const productSchema = z
     stock: z.number().int().min(0).nullable(),
     weight: z.number().int().positive().nullable(),
     bestBefore: z.number().int().positive().nullable(),
-    image: z.string().regex(/^\/teas\/[a-zA-Z0-9_.-]+\.(webp|png|jpg|jpeg)$/),
+    image: z.string().regex(/^\/teas\/(?:jars\/)?[a-zA-Z0-9_.-]+\.(webp|png|jpg|jpeg)$/),
     summary: z.string().max(3000),
     taste: z.string().max(2000),
     origin: z.string().max(2000).nullable(),
@@ -28,10 +28,21 @@ export const productSchema = z
     brewing: z.string().max(2000),
     storage: z.string().max(2000),
     claims: z.string().max(10000),
+    published: z.boolean().default(false),
     archived: z.boolean().default(false),
   })
   .superRefine((p, ctx) => {
-    if (p.status === "AVAILABLE" && (!p.price || p.stock === null || !p.weight))
+    if (p.published && p.status === "DRAFT")
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Choose Coming Soon, Available or Out of Stock before publishing.",
+      });
+    if (
+      p.published &&
+      p.status === "AVAILABLE" &&
+      (!p.price || p.stock === null || !p.weight)
+    )
       ctx.addIssue({
         code: "custom",
         message:

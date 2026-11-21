@@ -50,6 +50,7 @@ export async function quote(
     const p = products.find((p) => p.id === i.id);
     if (
       !p ||
+      !p.published ||
       p.archived ||
       p.status !== "AVAILABLE" ||
       !p.price ||
@@ -114,7 +115,12 @@ export async function expireReservations() {
           actor: "reservation-worker",
           action: "RESERVATION_EXPIRED",
           target: id,
-          details: { released: o.items.map(i => ({ productId: i.productId, quantity: i.quantity })) },
+          details: {
+            released: o.items.map((i) => ({
+              productId: i.productId,
+              quantity: i.quantity,
+            })),
+          },
         },
       });
     }
@@ -141,9 +147,12 @@ export async function createOrder(input: z.infer<typeof checkoutSchema>) {
       // Lock products in a stable order to serialize stock deductions.
       for (const id of input.items.map((i) => i.id).sort())
         await tx.$queryRaw`SELECT "id" FROM "Product" WHERE "id"=${id} FOR UPDATE`;
-      const repeated = await tx.order.findUnique({ where: { idempotency: input.key } });
+      const repeated = await tx.order.findUnique({
+        where: { idempotency: input.key },
+      });
       if (repeated) {
-        if (repeated.requestHash !== digest) throw Error("Checkout has changed. Start a new attempt.");
+        if (repeated.requestHash !== digest)
+          throw Error("Checkout has changed. Start a new attempt.");
         return { id: repeated.id, token, reused: true };
       }
       const q = await quote(input.items, input.address.pin, tx);

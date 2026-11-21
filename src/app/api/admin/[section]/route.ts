@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { requireAdmin, productSchema, audit } from "@/lib/admin";
+import { requireAdmin, audit } from "@/lib/admin";
 import { sameOrigin } from "@/lib/security";
+import { saveProduct, changeProductState } from "@/lib/products";
 import { provider } from "@/lib/commerce";
 export async function POST(
   req: Request,
@@ -14,20 +16,10 @@ export async function POST(
     const { section } = await params;
     const b = await req.json();
     if (section === "products") {
-      const data = productSchema.parse(b);
-      await db.$transaction(async (tx) => {
-        const p = b.id
-          ? await tx.product.update({ where: { id: String(b.id) }, data })
-          : await tx.product.create({ data });
-        await tx.audit.create({
-          data: {
-            actor: admin.id,
-            action: "PRODUCT_SAVED",
-            target: p.id,
-            details: data,
-          },
-        });
-      });
+      const product = b.action
+        ? await changeProductState(b, admin.id)
+        : await saveProduct(b, admin.id);
+      return NextResponse.json({ ok: true, product });
     } else if (section === "content") {
       const d = z
         .object({
@@ -228,7 +220,16 @@ export async function POST(
     } else throw Error("Unknown section");
     return NextResponse.json({ ok: true });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Request failed";
+    const message =
+      e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002"
+        ? "A product with this URL slug or SKU already exists. Please use a unique value."
+        : e instanceof z.ZodError
+          ? e.issues
+              .map((i) => `${i.path.join(".") || "Product"}: ${i.message}`)
+              .join("\n")
+          : e instanceof Error
+            ? e.message
+            : "Request failed";
     return NextResponse.json(
       { error: message },
       { status: message === "Unauthorized" ? 401 : 400 },
